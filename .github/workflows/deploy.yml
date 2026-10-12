@@ -53,7 +53,7 @@ jobs:
             set -e
             if [ ! -d /opt/negativeone/.git ]; then
               rm -rf /opt/negativeone
-              git clone https://github.com/SamCutmore/negativeone.git /opt/negativeone
+              git clone https://github.com/SamCutmore/DYHTG2026.git /opt/negativeone
             fi
             cd /opt/negativeone
             git fetch origin
