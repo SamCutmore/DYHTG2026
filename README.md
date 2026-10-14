@@ -1,12 +1,17 @@
 # DYHTG2026
 
-React + Spring Boot. On `main`: `test` → `build` → `publish`.
+React + Spring Boot. 
+
+Pipeline on `main`: `test` → `build` → `publish`
 
 ## Local
 
 ```bash
-cd backend && ./mvnw test && ./mvnw spring-boot:run
 cd frontend && npm install && npm run dev
+```
+
+```bash
+cd backend && ./mvnw test && ./mvnw spring-boot:run
 ```
 
 ## Opstools
