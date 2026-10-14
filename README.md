@@ -1,21 +1,21 @@
-# QUICK START
-React (Vite) frontend + Spring Boot backend.
-## Requirements
-- Node.js 22+
-- Java 21+
+# DYHTG2026
 
-From the root directory after pulling from git:
+React + Spring Boot. On `main`: `test` → `build` → `publish`.
 
-## Frontend
+## Local
 
-cd frontend
+```bash
+cd backend && ./mvnw test && ./mvnw spring-boot:run
+cd frontend && npm install && npm run dev
+```
 
-npm install
+## Opstools
 
-npm run dev
-
-## Backend
-
-cd backend
-
-./mvnw spring-boot:run
+```bash
+./opstools/setup.sh    # write .env
+./opstools/fetch.sh    # pull images from Nexus
+./opstools/up.sh       # start servers
+./opstools/status.sh   # Get service status
+./opstools/logs.sh     # show logs
+./opstools/down.sh     # shutdown servers
+```
