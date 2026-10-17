@@ -32,6 +32,7 @@ export async function searchItem(query: string): Promise<MarketItem> {
         condition: ['New', 'Like new', 'Good', 'Fair'][Math.floor(rand() * 4)],
         price: Math.round(price * 100) / 100,
         quantity: Math.floor(rand() * 5) + 1,
+        placed: new Date(Date.now() - Math.floor(rand() * 14 * 24 * 60) * 60_000).toISOString(),
       }
     })
 

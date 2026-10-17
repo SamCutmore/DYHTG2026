@@ -142,3 +142,50 @@
   fill: var(--text);
   font-size: 11px;
 }
+
+.market tr.clickable {
+  cursor: pointer;
+
+  &:hover {
+    background: var(--accent-bg);
+  }
+}
+
+.buy-order {
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.order-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+  }
+
+  input {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--code-bg);
+    color: var(--text-h);
+    font: inherit;
+  }
+
+  .total,
+  .actions {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+  }
+}

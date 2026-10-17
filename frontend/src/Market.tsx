@@ -12,6 +12,8 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 const money = (n: number) => `£${n.toFixed(2)}`
+const when = (iso: string) =>
+  new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
 
 function PriceChart({ points }: { points: PricePoint[] }) {
   const w = 800
@@ -37,7 +39,86 @@ function PriceChart({ points }: { points: PricePoint[] }) {
   )
 }
 
-function OrderTable({ title, tone, orders }: { title: string; tone: string; orders: Order[] }) {
+function BuyOrderForm({
+  sell,
+  itemName,
+  onClose,
+}: {
+  sell: Order
+  itemName: string
+  onClose: () => void
+}) {
+  const [price, setPrice] = useState(sell.price)
+  const [quantity, setQuantity] = useState(1)
+  const [placed, setPlaced] = useState(false)
+
+  return (
+    <section className="panel buy-order">
+      <h2>Buy order</h2>
+      {placed ? (
+        <>
+          <p>
+            Order placed: {quantity} x {itemName} at {money(price)} from {sell.counterparty} ({sell.source}).
+          </p>
+          <button type="button" onClick={onClose}>Done</button>
+        </>
+      ) : (
+        <form
+          className="order-form"
+          onSubmit={(e) => {
+            e.preventDefault()
+            setPlaced(true)
+          }}
+        >
+          <label>Item<input value={itemName} readOnly /></label>
+          <label>Seller<input value={sell.counterparty} readOnly /></label>
+          <label>Source<input value={sell.source} readOnly /></label>
+          <label>Condition<input value={sell.condition} readOnly /></label>
+          <label>Listed<input value={when(sell.placed)} readOnly /></label>
+          <label>
+            Price
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(Number(e.target.value))}
+            />
+          </label>
+          <label>
+            Quantity (max {sell.quantity})
+            <input
+              type="number"
+              min="1"
+              max={sell.quantity}
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+            />
+          </label>
+          <p className="total">Total: {money(price * quantity)}</p>
+          <div className="actions">
+            <button type="submit" disabled={quantity < 1 || quantity > sell.quantity || price <= 0}>
+              Place buy order
+            </button>
+            <button type="button" onClick={onClose}>Cancel</button>
+          </div>
+        </form>
+      )}
+    </section>
+  )
+}
+
+function OrderTable({
+  title,
+  tone,
+  orders,
+  onSelect,
+}: {
+  title: string
+  tone: string
+  orders: Order[]
+  onSelect?: (order: Order) => void
+}) {
   return (
     <section className={`book ${tone}`}>
       <h2>{title}</h2>
@@ -49,16 +130,22 @@ function OrderTable({ title, tone, orders }: { title: string; tone: string; orde
             <th>Condition</th>
             <th>Source</th>
             <th>{title === 'Sellers' ? 'Seller' : 'Buyer'}</th>
+            <th>Placed</th>
           </tr>
         </thead>
         <tbody>
           {orders.map((o) => (
-            <tr key={o.id}>
+            <tr
+              key={o.id}
+              className={onSelect ? 'clickable' : undefined}
+              onClick={onSelect ? () => onSelect(o) : undefined}
+            >
               <td className="price">{money(o.price)}</td>
               <td>{o.quantity}</td>
               <td>{o.condition}</td>
               <td>{o.source}</td>
               <td>{o.counterparty}</td>
+              <td>{when(o.placed)}</td>
             </tr>
           ))}
         </tbody>
@@ -71,6 +158,7 @@ function Market() {
   const [query, setQuery] = useState('')
   const [tab, setTab] = useState<Tab>('orders')
   const [item, setItem] = useState<MarketItem | null>(null)
+  const [selectedSell, setSelectedSell] = useState<Order | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -81,6 +169,7 @@ function Market() {
     setBusy(true)
     try {
       setItem(await searchItem(query.trim()))
+      setSelectedSell(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Search failed')
     } finally {
@@ -158,7 +247,21 @@ function Market() {
               </section>
             ) : null}
 
-            <OrderTable title="Sellers" tone="sell" orders={item.sells} />
+            {selectedSell ? (
+              <BuyOrderForm
+                key={selectedSell.id}
+                sell={selectedSell}
+                itemName={item.name}
+                onClose={() => setSelectedSell(null)}
+              />
+            ) : null}
+
+            <OrderTable
+              title="Sellers"
+              tone="sell"
+              orders={item.sells}
+              onSelect={setSelectedSell}
+            />
             <OrderTable title="Buyers" tone="buy" orders={item.buys} />
           </>
         )}

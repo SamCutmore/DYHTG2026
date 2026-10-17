@@ -10,6 +10,7 @@ export type Order = {
   condition: string
   price: number
   quantity: number
+  placed: string
 }
 
 export type PricePoint = {
