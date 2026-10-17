@@ -5,6 +5,10 @@ import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+/**
+ * @deprecated Used only by deprecated {@code ComparePriceSolver}; not part of the market API.
+ */
+@Deprecated(since = "0.0.1", forRemoval = false)
 @Repository
 public class PriceRepository {
 

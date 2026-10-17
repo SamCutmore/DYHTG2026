@@ -9,6 +9,10 @@ import xyz.negativeone.app.persistence.PriceRecord;
 import xyz.negativeone.app.persistence.PriceRepository;
 import xyz.negativeone.app.solver.Query;
 
+/**
+ * @deprecated Early scaffold / price-compare demo; not part of the market API.
+ */
+@Deprecated(since = "0.0.1", forRemoval = false)
 public class ComparePriceSolver implements ISolver {
 
     private final PriceRepository repository;

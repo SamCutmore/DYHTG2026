@@ -14,6 +14,10 @@ import xyz.negativeone.app.persistence.MessageRecord;
 import xyz.negativeone.app.persistence.MessageRepository;
 import xyz.negativeone.app.solver.Query;
 
+/**
+ * @deprecated Early scaffold; not part of the market API.
+ */
+@Deprecated(since = "0.0.1", forRemoval = false)
 public class ReadMessagesSolver extends RegexSolver {
 	private static final Logger logger = LoggerFactory.getLogger(ReadMessagesSolver.class);
 

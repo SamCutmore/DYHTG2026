@@ -8,6 +8,10 @@ import org.slf4j.LoggerFactory;
 import xyz.negativeone.app.persistence.MessageRepository;
 import xyz.negativeone.app.solver.Query;
 
+/**
+ * @deprecated Early scaffold; not part of the market API. Prefer market solvers.
+ */
+@Deprecated(since = "0.0.1", forRemoval = false)
 public class SendMessageSolver extends RegexSolver {
 	private static final Logger logger = LoggerFactory.getLogger(SendMessageSolver.class);
 

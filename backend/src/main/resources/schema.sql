@@ -1,3 +1,4 @@
+-- Deprecated
 CREATE TABLE IF NOT EXISTS messages (
     id BIGSERIAL PRIMARY KEY,
     created_at TIMESTAMP WITH TIME ZONE
@@ -5,7 +6,7 @@ CREATE TABLE IF NOT EXISTS messages (
     body TEXT NOT NULL
 );
 
--- Price-compare demo table (separate from messages)
+-- Deprecated
 CREATE TABLE IF NOT EXISTS prices (
     id BIGSERIAL PRIMARY KEY,
     site TEXT NOT NULL,
