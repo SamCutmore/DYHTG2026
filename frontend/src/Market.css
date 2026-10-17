@@ -1,0 +1,144 @@
+#root {
+  width: 100%;
+  border-inline: none;
+  text-align: left;
+}
+
+.market {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 1;
+  flex-wrap: wrap;
+}
+
+.search {
+  display: flex;
+  gap: 8px;
+  flex: 0 1 380px;
+
+  input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--code-bg);
+    color: var(--text-h);
+    font: inherit;
+  }
+}
+
+.market button {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+
+  button {
+    background: none;
+    border-color: transparent;
+    color: var(--text);
+
+    &.active {
+      color: var(--accent);
+      border-bottom: 2px solid var(--accent);
+      border-radius: 6px 6px 0 0;
+    }
+  }
+}
+
+.market main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  max-width: 1100px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;
+
+  h1 {
+    margin: 0;
+    font-size: 32px;
+    letter-spacing: normal;
+  }
+
+  h2 {
+    margin: 0 0 8px;
+    font-size: 18px;
+  }
+}
+
+.empty {
+  text-align: center;
+  margin-top: 80px;
+}
+
+.error {
+  color: #dc2626;
+}
+
+.market table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+
+  th,
+  td {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+
+  th {
+    color: var(--text-h);
+    font-weight: 500;
+  }
+}
+
+.price {
+  font-family: var(--mono);
+  font-weight: 600;
+}
+
+.book.sell .price {
+  color: #dc2626;
+}
+
+.book.buy .price {
+  color: #16a34a;
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+}
+
+.chart-label {
+  fill: var(--text);
+  font-size: 11px;
+}
