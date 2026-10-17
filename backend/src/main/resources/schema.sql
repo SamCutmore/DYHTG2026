@@ -1,11 +1,17 @@
 CREATE TABLE IF NOT EXISTS messages (
     id BIGSERIAL PRIMARY KEY,
-    site TEXT NOT NULL,
-    price NUMERIC(10,2) NOT NULL,
-    name TEXT NOT NULL,
-    location TEXT,
     created_at TIMESTAMP WITH TIME ZONE
-        NOT NULL DEFAULT CURRENT_TIMESTAMP
+        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    body TEXT NOT NULL
+);
+
+-- Price-compare demo table (separate from messages)
+CREATE TABLE IF NOT EXISTS prices (
+    id BIGSERIAL PRIMARY KEY,
+    site TEXT NOT NULL,
+    price NUMERIC(10, 2) NOT NULL,
+    name TEXT NOT NULL,
+    location TEXT
 );
 
 -- Auth (ported from SPRE Users + session tokens)

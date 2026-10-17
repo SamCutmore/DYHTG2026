@@ -17,7 +17,7 @@ public class PriceRepository {
     public List<PriceRecord> findCheapest(String name) {
         String sql = """
             SELECT id, name, site, price, location
-            FROM messages
+            FROM prices
             WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))
             ORDER BY price ASC, id ASC
             LIMIT 1
@@ -34,7 +34,7 @@ public class PriceRepository {
     }
     public void checkDatabase() {
         Integer count = jdbc.queryForObject(
-            "SELECT COUNT(*) FROM messages",
+            "SELECT COUNT(*) FROM prices",
             Integer.class
         );
 
