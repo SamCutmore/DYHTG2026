@@ -10,6 +10,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import xyz.negativeone.app.auth.SessionService;
 import xyz.negativeone.app.password.PasswordCredentialService;
+import xyz.negativeone.app.persistence.InvTypeRepository;
 import xyz.negativeone.app.persistence.MarketGroupRepository;
 import xyz.negativeone.app.persistence.MessageRepository;
 import xyz.negativeone.app.persistence.PriceRepository;
@@ -17,6 +18,7 @@ import xyz.negativeone.app.persistence.UserRepository;
 import xyz.negativeone.app.solver.solvers.ComparePriceSolver;
 import xyz.negativeone.app.solver.solvers.ISolver;
 import xyz.negativeone.app.solver.solvers.ListMarketGroupsSolver;
+import xyz.negativeone.app.solver.solvers.ListTypesSolver;
 import xyz.negativeone.app.solver.solvers.LoginSolver;
 import xyz.negativeone.app.solver.solvers.LogoutSolver;
 import xyz.negativeone.app.solver.solvers.ReadMessagesSolver;
@@ -34,6 +36,7 @@ public class SolverDispatcher extends QueryParser {
 			PasswordCredentialService credentials,
 			SessionService sessions,
 			MarketGroupRepository marketGroups,
+			InvTypeRepository invTypes,
 			JsonMapper jsonMapper) {
 
 		solvers.add(new SendMessageSolver(messages));
@@ -43,6 +46,7 @@ public class SolverDispatcher extends QueryParser {
 		solvers.add(new LoginSolver(users, credentials, sessions, jsonMapper));
 		solvers.add(new LogoutSolver(sessions));
 		solvers.add(new ListMarketGroupsSolver(marketGroups, jsonMapper));
+		solvers.add(new ListTypesSolver(invTypes, jsonMapper));
 	}
 
 	@Override
