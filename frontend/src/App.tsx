@@ -1,57 +1,108 @@
-import gutsLogo from './assets/guts.png'
+import { useState } from 'react'
+import { readMessages, sendMessage } from './api/clients'
+import type { Message } from './api/types'
 import './App.css'
 
-const stack = [
-  { name: 'Spring', href: 'https://spring.io/projects/spring-boot', icon: '/tech/springboot.svg' },
-  { name: 'React', href: 'https://react.dev/', icon: '/tech/react.svg' },
-  { name: 'PostgreSQL', href: 'https://www.postgresql.org/', icon: '/tech/postgresql.svg' },
-  { name: 'pgAdmin', href: 'https://www.pgadmin.org/', icon: '/tech/pgadmin.svg' },
-  { name: 'nginx', href: 'https://nginx.org/', icon: '/tech/nginx.svg' },
-  { name: 'Nexus', href: 'https://www.sonatype.com/products/sonatype-nexus-repository', icon: '/tech/sonatype.svg' },
-  { name: 'Docker', href: 'https://www.docker.com/', icon: '/tech/docker.svg' },
-  { name: 'Vite', href: 'https://vite.dev/', icon: '/tech/vite.svg' },
-  { name: 'GitHub', href: 'https://github.com/SamCutmore/DYHTG2026', icon: '/tech/github.svg' },
-] as const
-
 function App() {
+  const [text, setText] = useState('')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+  const [messages, setMessages] = useState<Message[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  async function onSend() {
+    setError(null)
+    setBusy(true)
+    try {
+      await sendMessage(text)
+      setText('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Send failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function onRetrieve() {
+    setError(null)
+    setBusy(true)
+    try {
+      const rows = await readMessages(from, to)
+      setMessages(rows)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Retrieve failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={gutsLogo} className="base" width="170" height="179" alt="" />
-        </div>
-        <div>
-          <h1>DYHTG Hackathon Start</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-      </section>
+    <section id="center">
+      <h1>Messages</h1>
 
-      <div className="ticks"></div>
+      <div className="message-form">
+        <label>
+          Message
+          <input
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            disabled={busy}
+          />
+        </label>
+        <button type="button" onClick={onSend} disabled={busy || !text.trim()}>
+          Send
+        </button>
+      </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Tech Stack Documentation</h2>
-          <ul>
-            {stack.map((item) => (
-              <li key={item.name}>
-                <a href={item.href} target="_blank" rel="noreferrer">
-                  <img className="button-icon" src={item.icon} alt="" />
-                  {item.name}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      <div className="message-form">
+        <label>
+          From
+          <input
+            type="datetime-local"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            disabled={busy}
+          />
+        </label>
+        <label>
+          To
+          <input
+            type="datetime-local"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            disabled={busy}
+          />
+        </label>
+        <button
+          type="button"
+          onClick={onRetrieve}
+          disabled={busy || !from || !to}
+        >
+          Retrieve
+        </button>
+      </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      {error ? <p className="error">{error}</p> : null}
+
+      <table className="messages">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody>
+          {messages.map((row) => (
+            <tr key={`${row.date}-${row.message}`}>
+              <td>{row.date}</td>
+              <td>{row.message}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
   )
 }
 

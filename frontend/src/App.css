@@ -182,3 +182,47 @@
     border-right-color: var(--border);
   }
 }
+
+.message-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+  justify-content: center;
+  width: min(640px, 100%);
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: left;
+    flex: 1 1 160px;
+  }
+
+  input {
+    padding: 8px 10px;
+    font: inherit;
+  }
+
+  button {
+    padding: 8px 14px;
+    font: inherit;
+    cursor: pointer;
+  }
+}
+
+table.messages {
+  width: min(640px, 100%);
+  border-collapse: collapse;
+  text-align: left;
+
+  th,
+  td {
+    border-bottom: 1px solid var(--border);
+    padding: 8px 10px;
+  }
+}
+
+.error {
+  color: #b00020;
+}

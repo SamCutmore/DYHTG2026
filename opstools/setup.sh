@@ -28,8 +28,8 @@ prompt() {
   prompt NEXUS_USERNAME
   prompt NEXUS_PASSWORD "" 1
   prompt IMAGE_TAG "latest"
-  prompt SPRING_DATASOURCE_URL
-  prompt SPRING_DATASOURCE_USERNAME
+  prompt SPRING_DATASOURCE_URL "jdbc:postgresql://host.docker.internal:5432/app"
+  prompt SPRING_DATASOURCE_USERNAME "app"
   prompt SPRING_DATASOURCE_PASSWORD "" 1
 } >"$ENV_FILE"
 
