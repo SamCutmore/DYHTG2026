@@ -33,6 +33,7 @@ public class MarketOrderRepository {
 				rs.getInt("quantity_initial"),
 				rs.getString("status"),
 				rs.getString("external_url"),
+				rs.getString("external_listing_id"),
 				rs.getString("owner_kind"),
 				rs.getString("owner_ref"),
 				userId,
@@ -43,7 +44,7 @@ public class MarketOrderRepository {
 
 	private static final String COLUMNS = """
 			order_id, type_id, location_id, source_id, side, price, quantity,
-			quantity_initial, status, external_url, owner_kind, owner_ref,
+			quantity_initial, status, external_url, external_listing_id, owner_kind, owner_ref,
 			user_id, expires_at, created_at, updated_at
 			""";
 
@@ -88,6 +89,148 @@ public class MarketOrderRepository {
 			throw new IllegalStateException("Failed to insert buy order");
 		}
 		return id.longValue();
+	}
+
+	/** Active external sell keyed by marketplace listing id. */
+	public Optional<MarketOrderRecord> findActiveExternalSell(int sourceId, String externalListingId) {
+		Instant now = Instant.now();
+		cancelExpired(now);
+		List<MarketOrderRecord> rows = jdbc.query(
+				"""
+				SELECT %s
+				FROM market_orders
+				WHERE source_id = ?
+				  AND external_listing_id = ?
+				  AND side = 'sell'
+				  AND owner_kind = 'external'
+				  AND status IN ('open', 'partial')
+				  AND quantity > 0
+				  AND (expires_at IS NULL OR expires_at > ?)
+				ORDER BY order_id DESC
+				""".formatted(COLUMNS),
+				MAPPER,
+				sourceId,
+				externalListingId,
+				Timestamp.from(now));
+		return rows.stream().findFirst();
+	}
+
+	/**
+	 * Insert or refresh an ingested external sell. Cancel listings not seen in the latest scrape.
+	 */
+	public MarketOrderRecord upsertExternalSell(
+			int typeId,
+			int locationId,
+			int sourceId,
+			BigDecimal price,
+			int quantity,
+			String externalListingId) {
+		Timestamp now = Timestamp.from(Instant.now());
+		Optional<MarketOrderRecord> existing = findActiveExternalSell(sourceId, externalListingId);
+		if (existing.isPresent()) {
+			MarketOrderRecord order = existing.get();
+			int filled = order.quantityInitial() - order.quantity();
+			int newInitial = filled + quantity;
+			String status = filled > 0 ? "partial" : "open";
+			jdbc.update(
+					"""
+					UPDATE market_orders
+					SET type_id = ?, location_id = ?, price = ?, quantity = ?,
+					    quantity_initial = ?, status = ?, updated_at = ?
+					WHERE order_id = ?
+					""",
+					typeId,
+					locationId,
+					price,
+					quantity,
+					newInitial,
+					status,
+					now,
+					order.orderId());
+			return findActiveExternalSell(sourceId, externalListingId)
+					.orElseThrow(() -> new IllegalStateException("Failed to reload upserted sell"));
+		}
+
+		KeyHolder keys = new GeneratedKeyHolder();
+		jdbc.update(con -> {
+			var ps = con.prepareStatement(
+					"""
+					INSERT INTO market_orders (
+					    type_id, location_id, source_id, side, price, quantity, quantity_initial,
+					    status, external_url, external_listing_id, owner_kind, owner_ref,
+					    user_id, expires_at, created_at, updated_at)
+					VALUES (?, ?, ?, 'sell', ?, ?, ?, 'open', NULL, ?, 'external', ?, NULL, NULL, ?, ?)
+					""",
+					new String[] { "order_id" });
+			ps.setInt(1, typeId);
+			ps.setInt(2, locationId);
+			ps.setInt(3, sourceId);
+			ps.setBigDecimal(4, price);
+			ps.setInt(5, quantity);
+			ps.setInt(6, quantity);
+			ps.setString(7, externalListingId);
+			ps.setString(8, externalListingId);
+			ps.setTimestamp(9, now);
+			ps.setTimestamp(10, now);
+			return ps;
+		}, keys);
+		Number id = keys.getKey();
+		if (id == null) {
+			throw new IllegalStateException("Failed to insert sell order");
+		}
+		return findActiveExternalSell(sourceId, externalListingId)
+				.orElseThrow(() -> new IllegalStateException("Failed to reload inserted sell"));
+	}
+
+	/** Cancel an ingested external sell by marketplace listing id. */
+	public Optional<MarketOrderRecord> cancelExternalSell(int sourceId, String externalListingId) {
+		Optional<MarketOrderRecord> existing = findActiveExternalSell(sourceId, externalListingId);
+		if (existing.isEmpty()) {
+			return Optional.empty();
+		}
+		jdbc.update(
+				"""
+				UPDATE market_orders
+				SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP
+				WHERE order_id = ?
+				""",
+				existing.get().orderId());
+		List<MarketOrderRecord> rows = jdbc.query(
+				"""
+				SELECT %s
+				FROM market_orders
+				WHERE order_id = ?
+				""".formatted(COLUMNS),
+				MAPPER,
+				existing.get().orderId());
+		return rows.stream().findFirst();
+	}
+
+	/**
+	 * Cancel open/partial external sells for a source whose updated_at is older than
+	 * {@code updatedBefore}.
+	 */
+	public int cancelStaleExternalSells(int sourceId, Instant updatedBefore) {
+		return jdbc.update(
+				"""
+				UPDATE market_orders
+				SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP
+				WHERE source_id = ?
+				  AND side = 'sell'
+				  AND owner_kind = 'external'
+				  AND status IN ('open', 'partial')
+				  AND updated_at < ?
+				""",
+				sourceId,
+				Timestamp.from(updatedBefore));
+	}
+
+	public boolean sourceExists(int sourceId) {
+		Integer count = jdbc.queryForObject(
+				"SELECT COUNT(*) FROM sources WHERE source_id = ?",
+				Integer.class,
+				sourceId);
+		return count != null && count > 0;
 	}
 
 	public void updateRemaining(long orderId, int quantity, String status) {

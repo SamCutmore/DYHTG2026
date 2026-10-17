@@ -14,6 +14,7 @@ public record MarketOrderRecord(
 		int quantityInitial,
 		String status,
 		String externalUrl,
+		String externalListingId,
 		String ownerKind,
 		String ownerRef,
 		Integer userId,
