@@ -107,10 +107,10 @@ public final class MarketTestFixtures {
 
 	/** Open book: two buys (185, 170) and two sells (195, 210). */
 	public static void seedOrderBook(JdbcTemplate jdbc) {
-		insertOrder(jdbc, "sell", new BigDecimal("210.00"), SOURCE_EBAY, "external", "fixture-sell-high");
-		insertOrder(jdbc, "sell", new BigDecimal("195.00"), SOURCE_VINTED, "external", "fixture-sell-ask");
-		insertOrder(jdbc, "buy", new BigDecimal("170.00"), SOURCE_APP, "market_maker", "fixture-buy-low");
-		insertOrder(jdbc, "buy", new BigDecimal("185.00"), SOURCE_APP, "market_maker", "fixture-buy-best");
+		insertOrder(jdbc, "sell", new BigDecimal("210.00"), SOURCE_EBAY, "external", "fixture-sell-high", null);
+		insertOrder(jdbc, "sell", new BigDecimal("195.00"), SOURCE_VINTED, "external", "fixture-sell-ask", null);
+		insertOrder(jdbc, "buy", new BigDecimal("170.00"), SOURCE_APP, "market_maker", "fixture-buy-low", null);
+		insertOrder(jdbc, "buy", new BigDecimal("185.00"), SOURCE_APP, "market_maker", "fixture-buy-best", null);
 	}
 
 	public static void seedHistory(JdbcTemplate jdbc) {
@@ -133,7 +133,19 @@ public final class MarketTestFixtures {
 	}
 
 	public static void seedOpenSell(JdbcTemplate jdbc, BigDecimal price, String listingId) {
-		insertOrder(jdbc, "sell", price, SOURCE_VINTED, "external", listingId);
+		insertOrder(jdbc, "sell", price, SOURCE_VINTED, "external", listingId, null);
+	}
+
+	/** Open sell that is already past expires_at */
+	public static void seedExpiredSell(JdbcTemplate jdbc, BigDecimal price, String listingId) {
+		insertOrder(
+				jdbc,
+				"sell",
+				price,
+				SOURCE_VINTED,
+				"external",
+				listingId,
+				java.sql.Timestamp.from(java.time.Instant.now().minusSeconds(3600)));
 	}
 
 	private static void insertOrder(
@@ -142,13 +154,15 @@ public final class MarketTestFixtures {
 			BigDecimal price,
 			int sourceId,
 			String ownerKind,
-			String ownerRef) {
+			String ownerRef,
+			java.sql.Timestamp expiresAt) {
 		jdbc.update(
 				"""
 				INSERT INTO market_orders (
 				    type_id, location_id, source_id, side, price, quantity, quantity_initial,
-				    status, external_url, external_listing_id, owner_kind, owner_ref)
-				VALUES (?, ?, ?, ?, ?, 1, 1, 'open', NULL, ?, ?, ?)
+				    status, external_url, external_listing_id, owner_kind, owner_ref,
+				    user_id, expires_at)
+				VALUES (?, ?, ?, ?, ?, 1, 1, 'open', NULL, ?, ?, ?, NULL, ?)
 				""",
 				TYPE_ID,
 				LOCATION_ID,
@@ -157,7 +171,8 @@ public final class MarketTestFixtures {
 				price,
 				ownerRef,
 				ownerKind,
-				ownerRef);
+				ownerRef,
+				expiresAt);
 	}
 
 	private static void insertHistory(

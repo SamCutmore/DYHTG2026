@@ -81,6 +81,8 @@ CREATE TABLE IF NOT EXISTS market_orders (
     owner_kind          VARCHAR(32) NOT NULL
                         CHECK (owner_kind IN ('user', 'market_maker', 'external')),
     owner_ref           VARCHAR(255) NULL,
+    user_id             BIGINT NULL REFERENCES users (id),
+    expires_at          TIMESTAMP WITH TIME ZONE NULL,
     created_at          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -90,6 +92,12 @@ CREATE INDEX IF NOT EXISTS idx_market_orders_book
 
 CREATE INDEX IF NOT EXISTS idx_market_orders_external
     ON market_orders (source_id, external_listing_id);
+
+CREATE INDEX IF NOT EXISTS idx_market_orders_user_id
+    ON market_orders (user_id);
+
+CREATE INDEX IF NOT EXISTS idx_market_orders_expires_at
+    ON market_orders (expires_at);
 
 CREATE TABLE IF NOT EXISTS market_fills (
     fill_id       BIGSERIAL PRIMARY KEY,

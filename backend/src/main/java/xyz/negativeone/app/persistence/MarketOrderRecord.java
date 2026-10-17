@@ -1,6 +1,7 @@
 package xyz.negativeone.app.persistence;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 public record MarketOrderRecord(
 		long orderId,
@@ -14,5 +15,7 @@ public record MarketOrderRecord(
 		String status,
 		String externalUrl,
 		String ownerKind,
-		String ownerRef) {
+		String ownerRef,
+		Integer userId,
+		Instant expiresAt) {
 }

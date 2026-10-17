@@ -1,6 +1,8 @@
 package xyz.negativeone.app.solver.solvers;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -22,6 +24,7 @@ import xyz.negativeone.app.solver.Query;
  */
 public class PlaceBuyOrderSolver extends RegexSolver {
 	private static final Logger logger = LoggerFactory.getLogger(PlaceBuyOrderSolver.class);
+	private static final Duration ORDER_TTL = Duration.ofDays(7);
 
 	private final SessionService sessions;
 	private final InvTypeRepository types;
@@ -68,12 +71,15 @@ public class PlaceBuyOrderSolver extends RegexSolver {
 			throw new IllegalArgumentException("Unknown typeId");
 		}
 
-		long orderId = orders.insertBuy(typeId, locationId, price, quantity, Integer.toString(userId));
+		Instant expiresAt = Instant.now().plus(ORDER_TTL);
+		long orderId = orders.insertBuy(typeId, locationId, price, quantity, userId, expiresAt);
 		int fills = marketMaker.match(typeId, locationId);
 		logger.info("placeBuyOrder orderId={} userId={} fills={}", orderId, userId, fills);
 
 		Map<String, Object> body = new LinkedHashMap<>();
 		body.put("orderId", orderId);
+		body.put("userId", userId);
+		body.put("expiresAt", expiresAt.toString());
 		body.put("fills", fills);
 		try {
 			return jsonMapper.writeValueAsString(body);

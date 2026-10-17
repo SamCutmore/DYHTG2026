@@ -1,6 +1,7 @@
 package xyz.negativeone.app.market;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -29,6 +30,7 @@ public class MarketMaker {
 
 	@Transactional
 	public int match(int typeId, int locationId) {
+		orders.cancelExpired(Instant.now());
 		int fillCount = 0;
 		while (true) {
 			List<MarketOrderRecord> buys = orders.findOpenBuys(typeId, locationId);

@@ -39,6 +39,8 @@ export type MarketOrder = {
   externalUrl: string | null
   ownerKind: 'user' | 'market_maker' | 'external'
   ownerRef: string | null
+  userId: number | null
+  expiresAt: string | null
 }
 
 export type OrderBook = {
