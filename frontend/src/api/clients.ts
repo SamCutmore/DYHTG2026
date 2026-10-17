@@ -19,7 +19,7 @@ function toIso(value: string): string {
 
 export async function readMessages(from: string, to: string): Promise<Message[]> {
   const { data } = await api.get<Message[]>('/api', {
-    params: { q: `readMessages: ${toIso(from)}|${toIso(to)}` },
+    params: { q: `readMessages: ${toIso(from)};${toIso(to)}` },
   })
   return data
 }
@@ -30,7 +30,7 @@ export async function register(
   passwordAgain: string,
 ): Promise<void> {
   const { data } = await api.post<string>('/api', null, {
-    params: { q: `register: ${username}|${password}|${passwordAgain}` },
+    params: { q: `register: ${username};${password};${passwordAgain}` },
   })
   if (data !== 'OK') {
     throw new Error('Registration failed')
@@ -39,7 +39,7 @@ export async function register(
 
 export async function login(username: string, password: string): Promise<LoginResponse> {
   const { data } = await api.post<LoginResponse | string>('/api', null, {
-    params: { q: `login: ${username}|${password}` },
+    params: { q: `login: ${username};${password}` },
   })
   if (typeof data === 'string' || !data?.token) {
     throw new Error('Login failed')

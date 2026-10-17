@@ -19,7 +19,7 @@ import xyz.negativeone.app.solver.Query;
 
 /**
  * Ported from SPRE ClientController.handleLogin, plus session token.
- * q=login: username|password → {"token","userId","username"} or Not OK
+ * q=login: username;password → {"token","userId","username"} or Not OK
  */
 public class LoginSolver extends RegexSolver {
 	private static final Logger logger = LoggerFactory.getLogger(LoginSolver.class);
@@ -34,7 +34,7 @@ public class LoginSolver extends RegexSolver {
 			PasswordCredentialService credentials,
 			SessionService sessions,
 			JsonMapper jsonMapper) {
-		super("^([^|]+)\\|([^|]+)$");
+		super("^([^;]+);([^;]+)$");
 		this.users = users;
 		this.credentials = credentials;
 		this.sessions = sessions;

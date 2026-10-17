@@ -21,7 +21,7 @@ public class ReadMessagesSolver extends RegexSolver {
 	private final JsonMapper jsonMapper;
 
 	public ReadMessagesSolver(MessageRepository messages, JsonMapper jsonMapper) {
-		super("^(.+)\\|(.+)$");
+		super("^(.+);(.+)$");
 		this.messages = messages;
 		this.jsonMapper = jsonMapper;
 	}

@@ -13,7 +13,7 @@ import xyz.negativeone.app.solver.Query;
 
 /**
  * Ported from SPRE ClientController.handleRegistration, as a solver.
- * q=register: username|password|password_again
+ * q=register: username;password;password_again
  */
 public class RegisterSolver extends RegexSolver {
 	private static final Logger logger = LoggerFactory.getLogger(RegisterSolver.class);
@@ -22,7 +22,7 @@ public class RegisterSolver extends RegexSolver {
 	private final PasswordCredentialService credentials;
 
 	public RegisterSolver(UserRepository users, PasswordCredentialService credentials) {
-		super("^([^|]+)\\|([^|]+)\\|([^|]+)$");
+		super("^([^;]+);([^;]+);([^;]+)$");
 		this.users = users;
 		this.credentials = credentials;
 	}
