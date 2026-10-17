@@ -45,7 +45,7 @@ cd backend
 | `NEXUS_USERNAME` | Nexus docker user |
 | `NEXUS_PASSWORD` | Nexus password |
 | `IMAGE_TAG` | `latest` |
-| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://postgres:5432/app` |
+| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://postgres:5432/dyhtg` |
 | `SPRING_DATASOURCE_USERNAME` | Postgres user |
 | `SPRING_DATASOURCE_PASSWORD` | Postgres password |
 
