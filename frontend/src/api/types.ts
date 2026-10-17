@@ -25,3 +25,25 @@ export type InvType = {
   published: boolean
   marketGroupId: number | null
 }
+
+export type MarketOrder = {
+  orderId: number
+  typeId: number
+  locationId: number
+  sourceId: number
+  side: 'buy' | 'sell'
+  price: number
+  quantity: number
+  quantityInitial: number
+  status: 'open' | 'partial' | 'filled' | 'cancelled'
+  externalUrl: string | null
+  ownerKind: 'user' | 'market_maker' | 'external'
+  ownerRef: string | null
+}
+
+export type OrderBook = {
+  typeId: number
+  buys: MarketOrder[]
+  sells: MarketOrder[]
+  locationId: number
+}
