@@ -126,6 +126,16 @@ public final class MarketTestFixtures {
 		seedHistory(jdbc);
 	}
 
+	/** Catalogue only */
+	public static void seedCatalogueOnly(JdbcTemplate jdbc) {
+		clearMarketData(jdbc);
+		seedCatalogue(jdbc);
+	}
+
+	public static void seedOpenSell(JdbcTemplate jdbc, BigDecimal price, String listingId) {
+		insertOrder(jdbc, "sell", price, SOURCE_VINTED, "external", listingId);
+	}
+
 	private static void insertOrder(
 			JdbcTemplate jdbc,
 			String side,
