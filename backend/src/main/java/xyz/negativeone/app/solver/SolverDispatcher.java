@@ -18,7 +18,9 @@ import xyz.negativeone.app.persistence.MarketOrderRepository;
 import xyz.negativeone.app.persistence.MessageRepository;
 import xyz.negativeone.app.persistence.PriceRepository;
 import xyz.negativeone.app.persistence.UserRepository;
+import xyz.negativeone.app.solver.solvers.CancelOrderSolver;
 import xyz.negativeone.app.solver.solvers.ComparePriceSolver;
+import xyz.negativeone.app.solver.solvers.EditOrderSolver;
 import xyz.negativeone.app.solver.solvers.GetHistorySolver;
 import xyz.negativeone.app.solver.solvers.GetMyOrdersSolver;
 import xyz.negativeone.app.solver.solvers.GetOrderBookSolver;
@@ -63,6 +65,8 @@ public class SolverDispatcher extends QueryParser {
 		solvers.add(new GetOrderBookSolver(marketOrders, jsonMapper));
 		solvers.add(new GetHistorySolver(marketHistory, jsonMapper));
 		solvers.add(new PlaceBuyOrderSolver(sessions, invTypes, marketOrders, marketMaker, jsonMapper));
+		solvers.add(new CancelOrderSolver(sessions, marketOrders, jsonMapper));
+		solvers.add(new EditOrderSolver(sessions, marketOrders, marketMaker, jsonMapper));
 		solvers.add(new ListMyOrdersSolver(sessions, marketOrders, jsonMapper));
 		solvers.add(new ListMyTransactionsSolver(sessions, marketOrders, marketFills, jsonMapper));
 		solvers.add(new GetMyOrdersSolver(sessions, marketOrders, jsonMapper));

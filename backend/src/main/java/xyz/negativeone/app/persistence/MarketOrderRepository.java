@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -181,38 +182,107 @@ public class MarketOrderRepository {
 				Timestamp.from(now));
 	}
 
-	/** user's buy orders. */
+	/** User's buy orders. */
 	public List<MyOrderRecord> findUserBuyOrders(int userId) {
-    Instant now = Instant.now();
-    cancelExpired(now);
-    return jdbc.query(
-            """
-            SELECT o.order_id, o.type_id, t.type_name, o.price,
-                   o.quantity, o.quantity_initial, o.created_at,
-                   CASE
-                     WHEN o.status IN ('open', 'partial')
-                          AND o.expires_at IS NOT NULL
-                          AND o.expires_at <= ?
-                     THEN 'cancelled'
-                     ELSE o.status
-                   END AS status
-            FROM market_orders o
-            JOIN inv_types t ON t.type_id = o.type_id
-            WHERE o.user_id = ?
-              AND o.side = 'buy'
-            ORDER BY o.created_at DESC, o.order_id DESC
-            """,
-            (rs, rowNum) -> new MyOrderRecord(
-                    rs.getLong("order_id"),
-                    rs.getInt("type_id"),
-                    rs.getString("type_name"),
-                    rs.getBigDecimal("price"),
-                    rs.getInt("quantity"),
-                    rs.getInt("quantity_initial"),
-                    rs.getString("status"),
-                    rs.getTimestamp("created_at").toInstant().toString()),
-            Timestamp.from(now),
-            userId);
-}
+		Instant now = Instant.now();
+		cancelExpired(now);
+		return jdbc.query(
+				"""
+				SELECT o.order_id, o.type_id, t.type_name, o.price,
+				       o.quantity, o.quantity_initial, o.created_at,
+				       CASE
+				         WHEN o.status IN ('open', 'partial')
+				              AND o.expires_at IS NOT NULL
+				              AND o.expires_at <= ?
+				         THEN 'cancelled'
+				         ELSE o.status
+				       END AS status
+				FROM market_orders o
+				JOIN inv_types t ON t.type_id = o.type_id
+				WHERE o.user_id = ?
+				  AND o.side = 'buy'
+				ORDER BY o.created_at DESC, o.order_id DESC
+				""",
+				(rs, rowNum) -> new MyOrderRecord(
+						rs.getLong("order_id"),
+						rs.getInt("type_id"),
+						rs.getString("type_name"),
+						rs.getBigDecimal("price"),
+						rs.getInt("quantity"),
+						rs.getInt("quantity_initial"),
+						rs.getString("status"),
+						rs.getTimestamp("created_at").toInstant().toString()),
+				Timestamp.from(now),
+				userId);
+	}
+
+	/** Open/partial order owned by the user. */
+	public Optional<MarketOrderRecord> findOwnedActive(long orderId, int userId) {
+		Instant now = Instant.now();
+		cancelExpired(now);
+		List<MarketOrderRecord> rows = jdbc.query(
+				"""
+				SELECT %s
+				FROM market_orders
+				WHERE order_id = ?
+				  AND user_id = ?
+				  AND status IN ('open', 'partial')
+				  AND quantity > 0
+				  AND (expires_at IS NULL OR expires_at > ?)
+				""".formatted(COLUMNS),
+				MAPPER,
+				orderId,
+				userId,
+				Timestamp.from(now));
+		return rows.stream().findFirst();
+	}
+
+	/** Cancel an owned open/partial order. Returns true if a row was updated. */
+	public boolean cancelOwned(long orderId, int userId) {
+		Instant now = Instant.now();
+		cancelExpired(now);
+		int updated = jdbc.update(
+				"""
+				UPDATE market_orders
+				SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP
+				WHERE order_id = ?
+				  AND user_id = ?
+				  AND status IN ('open', 'partial')
+				  AND quantity > 0
+				  AND (expires_at IS NULL OR expires_at > ?)
+				""",
+				orderId,
+				userId,
+				Timestamp.from(now));
+		return updated == 1;
+	}
+
+	/**
+	 * Edit price and remaining quantity on an owned open/partial order.
+	 */
+	public Optional<MarketOrderRecord> editOwned(
+			long orderId, int userId, BigDecimal price, int newRemaining) {
+		Optional<MarketOrderRecord> existing = findOwnedActive(orderId, userId);
+		if (existing.isEmpty()) {
+			return Optional.empty();
+		}
+		MarketOrderRecord order = existing.get();
+		int filled = order.quantityInitial() - order.quantity();
+		int newInitial = filled + newRemaining;
+		String status = filled > 0 ? "partial" : "open";
+		jdbc.update(
+				"""
+				UPDATE market_orders
+				SET price = ?, quantity = ?, quantity_initial = ?, status = ?,
+				    updated_at = CURRENT_TIMESTAMP
+				WHERE order_id = ?
+				""",
+				price,
+				newRemaining,
+				newInitial,
+				status,
+				orderId);
+		return findOwnedActive(orderId, userId);
+	}
 }
 
