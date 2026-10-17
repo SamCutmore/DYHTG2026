@@ -196,3 +196,19 @@ SELECT 1001, 1, 6, 'buy', 185.00, 1, 1, 'open',
        NULL, NULL, 'market_maker', 'seed-buy-best'
 WHERE NOT EXISTS (
     SELECT 1 FROM market_orders WHERE owner_ref = 'seed-buy-best' AND side = 'buy');
+
+-- Demo history for type 1001 @ UK
+INSERT INTO market_history (location_id, type_id, date, low_price, high_price, avg_price, volume, orders)
+SELECT 1, 1001, DATE '2026-10-14', 175.00, 205.00, 190.00, 12, 8
+WHERE NOT EXISTS (
+    SELECT 1 FROM market_history WHERE location_id = 1 AND type_id = 1001 AND date = DATE '2026-10-14');
+
+INSERT INTO market_history (location_id, type_id, date, low_price, high_price, avg_price, volume, orders)
+SELECT 1, 1001, DATE '2026-10-15', 178.00, 200.00, 188.50, 9, 6
+WHERE NOT EXISTS (
+    SELECT 1 FROM market_history WHERE location_id = 1 AND type_id = 1001 AND date = DATE '2026-10-15');
+
+INSERT INTO market_history (location_id, type_id, date, low_price, high_price, avg_price, volume, orders)
+SELECT 1, 1001, DATE '2026-10-16', 172.00, 198.00, 185.00, 15, 11
+WHERE NOT EXISTS (
+    SELECT 1 FROM market_history WHERE location_id = 1 AND type_id = 1001 AND date = DATE '2026-10-16');

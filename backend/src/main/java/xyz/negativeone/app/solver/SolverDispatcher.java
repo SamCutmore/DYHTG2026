@@ -12,11 +12,13 @@ import xyz.negativeone.app.auth.SessionService;
 import xyz.negativeone.app.password.PasswordCredentialService;
 import xyz.negativeone.app.persistence.InvTypeRepository;
 import xyz.negativeone.app.persistence.MarketGroupRepository;
+import xyz.negativeone.app.persistence.MarketHistoryRepository;
 import xyz.negativeone.app.persistence.MarketOrderRepository;
 import xyz.negativeone.app.persistence.MessageRepository;
 import xyz.negativeone.app.persistence.PriceRepository;
 import xyz.negativeone.app.persistence.UserRepository;
 import xyz.negativeone.app.solver.solvers.ComparePriceSolver;
+import xyz.negativeone.app.solver.solvers.GetHistorySolver;
 import xyz.negativeone.app.solver.solvers.GetOrderBookSolver;
 import xyz.negativeone.app.solver.solvers.ISolver;
 import xyz.negativeone.app.solver.solvers.ListMarketGroupsSolver;
@@ -40,6 +42,7 @@ public class SolverDispatcher extends QueryParser {
 			MarketGroupRepository marketGroups,
 			InvTypeRepository invTypes,
 			MarketOrderRepository marketOrders,
+			MarketHistoryRepository marketHistory,
 			JsonMapper jsonMapper) {
 
 		solvers.add(new SendMessageSolver(messages));
@@ -51,6 +54,7 @@ public class SolverDispatcher extends QueryParser {
 		solvers.add(new ListMarketGroupsSolver(marketGroups, jsonMapper));
 		solvers.add(new ListTypesSolver(invTypes, jsonMapper));
 		solvers.add(new GetOrderBookSolver(marketOrders, jsonMapper));
+		solvers.add(new GetHistorySolver(marketHistory, jsonMapper));
 	}
 
 	@Override
