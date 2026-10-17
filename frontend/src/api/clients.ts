@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { InvType, LoginResponse, MarketGroup, Message } from './types'
+import type { InvType, LoginResponse, MarketGroup, Message, OrderBook } from './types'
 
 const api = axios.create({ baseURL: '/' })
 
@@ -88,6 +88,13 @@ export async function placeBuyOrder(
     params: {
       q: `placeBuyOrder: ${typeId};${locationId};${price};${quantity};${token}`,
     },
+  })
+  return data
+}
+
+export async function getOrderBook( typeId: number, locationId = 1): Promise<OrderBook> { // chose location 1 here is because it is the UK in the seed data, we have getOrderSolver handling this already
+  const { data } = await api.get<OrderBook>('/api', {
+    params: { q: `getOrderBook: ${typeId};${locationId}` },
   })
   return data
 }
