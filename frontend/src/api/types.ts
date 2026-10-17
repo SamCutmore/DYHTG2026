@@ -47,3 +47,14 @@ export type OrderBook = {
   sells: MarketOrder[]
   locationId: number
 }
+
+export type MyOrder = {
+  orderId: number
+  typeId: number
+  typeName: string
+  price: number
+  quantity: number
+  quantityInitial: number
+  status: MarketOrder['status']
+  createdAt: string
+}
