@@ -52,7 +52,7 @@ public class ClientController {
 			if (result == null) {
 				return ResponseEntity.badRequest().body("No solver matched");
 			}
-			if (result.startsWith("[")) {
+			if (result.startsWith("[") || result.startsWith("{")) {
 				JsonNode node = jsonMapper.readTree(result);
 				return ResponseEntity.ok(node);
 			}
