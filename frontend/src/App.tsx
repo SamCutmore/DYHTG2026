@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { readMessages, sendMessage } from './api/clients'
 import type { Message } from './api/types'
+import Sidebar from './Sidebar.tsx'
 import './App.css'
 
 function App() {
@@ -8,8 +9,12 @@ function App() {
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
+  const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const filteredMessages = messages.filter((row) =>
+    row.message.toLowerCase().includes(search.trim().toLowerCase()),
+  )
 
   async function onSend() {
     setError(null)
@@ -38,71 +43,68 @@ function App() {
   }
 
   return (
-    <section id="center">
-      <h1>Messages</h1>
+    <div className="app-shell">
+      <Sidebar
+        search={search}
+        messages={filteredMessages}
+        onSearchChange={setSearch}
+      />
 
-      <div className="message-form">
-        <label>
-          Message
-          <input
-            type="text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            disabled={busy}
-          />
-        </label>
-        <button type="button" onClick={onSend} disabled={busy || !text.trim()}>
-          Send
-        </button>
-      </div>
+      <main id="center">
+        <h1>Orders</h1>
 
-      <div className="message-form">
-        <label>
-          From
-          <input
-            type="datetime-local"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            disabled={busy}
-          />
-        </label>
-        <label>
-          To
-          <input
-            type="datetime-local"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            disabled={busy}
-          />
-        </label>
-        <button
-          type="button"
-          onClick={onRetrieve}
-          disabled={busy || !from || !to}
-        >
-          Retrieve
-        </button>
-      </div>
+        <div className="message-form">
+          <label>
+            Search order here
+            <input
+              type="text"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              disabled={busy}
+            />
+          </label>
+          <button type="button" onClick={onSend} disabled={busy || !text.trim()}>
+            Search
+          </button>
+        </div>
 
-      {error ? <p className="error">{error}</p> : null}
+        <div className="message-form">
+          <label>
+            From
+            <input
+              type="datetime-local"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              disabled={busy}
+            />
+          </label>
+          <label>
+            To
+            <input
+              type="datetime-local"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              disabled={busy}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={onRetrieve}
+            disabled={busy || !from || !to}
+          >
+            Retrieve
+          </button>
+        </div>
 
-      <table className="messages">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Message</th>
-          </tr>
-        </thead>
-        <tbody>
-          {messages.map((row) => (
-            <tr key={`${row.date}-${row.message}`}>
-              <td>{row.date}</td>
-              <td>{row.message}</td>
-            </tr>
+        {error ? <p className="error">{error}</p> : null}
+
+        <ul className="messages">
+          {filteredMessages.map((row) => (
+            <li key={`${row.date}-${row.message}`}>{row.message}</li>
           ))}
-        </tbody>
-      </table>
-    </section>
+        </ul>
+      </main>
+    </div>
   )
 }
 

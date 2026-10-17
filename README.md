@@ -14,7 +14,7 @@ cd frontend && npm install && npm run dev
 ```
 
 ```bash
-cd backend && ./mvnw test && ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+cd backend && ./mvnw test && ./mvnw spring-boot:run "-Dspring-boot.run.profiles=dev"
 ```
 
 ## Opstools (VPS / prod)
