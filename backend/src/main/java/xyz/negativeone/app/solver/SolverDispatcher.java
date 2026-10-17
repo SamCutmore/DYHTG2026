@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 
 import xyz.negativeone.app.auth.SessionService;
+import xyz.negativeone.app.market.MarketMaker;
 import xyz.negativeone.app.password.PasswordCredentialService;
 import xyz.negativeone.app.persistence.InvTypeRepository;
 import xyz.negativeone.app.persistence.MarketGroupRepository;
@@ -25,6 +26,7 @@ import xyz.negativeone.app.solver.solvers.ListMarketGroupsSolver;
 import xyz.negativeone.app.solver.solvers.ListTypesSolver;
 import xyz.negativeone.app.solver.solvers.LoginSolver;
 import xyz.negativeone.app.solver.solvers.LogoutSolver;
+import xyz.negativeone.app.solver.solvers.PlaceBuyOrderSolver;
 import xyz.negativeone.app.solver.solvers.ReadMessagesSolver;
 import xyz.negativeone.app.solver.solvers.RegisterSolver;
 import xyz.negativeone.app.solver.solvers.SendMessageSolver;
@@ -43,6 +45,7 @@ public class SolverDispatcher extends QueryParser {
 			InvTypeRepository invTypes,
 			MarketOrderRepository marketOrders,
 			MarketHistoryRepository marketHistory,
+			MarketMaker marketMaker,
 			JsonMapper jsonMapper) {
 
 		solvers.add(new SendMessageSolver(messages));
@@ -55,6 +58,7 @@ public class SolverDispatcher extends QueryParser {
 		solvers.add(new ListTypesSolver(invTypes, jsonMapper));
 		solvers.add(new GetOrderBookSolver(marketOrders, jsonMapper));
 		solvers.add(new GetHistorySolver(marketHistory, jsonMapper));
+		solvers.add(new PlaceBuyOrderSolver(sessions, invTypes, marketOrders, marketMaker, jsonMapper));
 	}
 
 	@Override

@@ -71,3 +71,23 @@ export async function listTypes(groupId: number): Promise<InvType[]> {
   })
   return data
 }
+
+export type PlaceBuyOrderResponse = {
+  orderId: number
+  fills: number
+}
+
+export async function placeBuyOrder(
+  typeId: number,
+  locationId: number,
+  price: number,
+  quantity: number,
+  token: string,
+): Promise<PlaceBuyOrderResponse> {
+  const { data } = await api.post<PlaceBuyOrderResponse>('/api', null, {
+    params: {
+      q: `placeBuyOrder: ${typeId};${locationId};${price};${quantity};${token}`,
+    },
+  })
+  return data
+}
