@@ -202,6 +202,10 @@ function Market() {
             </button>
           ))}
         </nav>
+        <nav className="account">
+          <a href="#/login">Log in</a>
+          <a href="#/register">Register</a>
+        </nav>
       </header>
 
       <main>

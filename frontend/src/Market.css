@@ -71,6 +71,21 @@
   }
 }
 
+.account {
+  display: flex;
+  gap: 16px;
+  margin-left: auto;
+
+  a {
+    color: var(--accent);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
 .market main {
   display: flex;
   flex-direction: column;
