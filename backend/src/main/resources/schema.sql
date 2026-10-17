@@ -164,3 +164,35 @@ WHERE NOT EXISTS (SELECT 1 FROM market_groups WHERE market_group_id = 12);
 INSERT INTO inv_types (type_id, type_name, description, base_price, published, market_group_id)
 SELECT 1001, 'iPhone 13 128GB', 'Used iPhone 13 128GB', 180.00, TRUE, 12
 WHERE NOT EXISTS (SELECT 1 FROM inv_types WHERE type_id = 1001);
+
+-- Order books examples
+
+INSERT INTO market_orders (
+    type_id, location_id, source_id, side, price, quantity, quantity_initial,
+    status, external_url, external_listing_id, owner_kind, owner_ref)
+SELECT 1001, 1, 1, 'sell', 210.00, 1, 1, 'open',
+       'https://www.ebay.co.uk/itm/demo-iphone-high', 'demo-sell-high', 'external', NULL
+WHERE NOT EXISTS (SELECT 1 FROM market_orders WHERE external_listing_id = 'demo-sell-high');
+
+INSERT INTO market_orders (
+    type_id, location_id, source_id, side, price, quantity, quantity_initial,
+    status, external_url, external_listing_id, owner_kind, owner_ref)
+SELECT 1001, 1, 2, 'sell', 195.00, 1, 1, 'open',
+       'https://www.vinted.co.uk/items/demo-iphone', 'demo-sell-ask', 'external', NULL
+WHERE NOT EXISTS (SELECT 1 FROM market_orders WHERE external_listing_id = 'demo-sell-ask');
+
+INSERT INTO market_orders (
+    type_id, location_id, source_id, side, price, quantity, quantity_initial,
+    status, external_url, external_listing_id, owner_kind, owner_ref)
+SELECT 1001, 1, 6, 'buy', 170.00, 1, 1, 'open',
+       NULL, NULL, 'market_maker', 'seed-buy-low'
+WHERE NOT EXISTS (
+    SELECT 1 FROM market_orders WHERE owner_ref = 'seed-buy-low' AND side = 'buy');
+
+INSERT INTO market_orders (
+    type_id, location_id, source_id, side, price, quantity, quantity_initial,
+    status, external_url, external_listing_id, owner_kind, owner_ref)
+SELECT 1001, 1, 6, 'buy', 185.00, 1, 1, 'open',
+       NULL, NULL, 'market_maker', 'seed-buy-best'
+WHERE NOT EXISTS (
+    SELECT 1 FROM market_orders WHERE owner_ref = 'seed-buy-best' AND side = 'buy');

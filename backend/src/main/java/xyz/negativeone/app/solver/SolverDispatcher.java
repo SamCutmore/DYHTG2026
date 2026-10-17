@@ -12,10 +12,12 @@ import xyz.negativeone.app.auth.SessionService;
 import xyz.negativeone.app.password.PasswordCredentialService;
 import xyz.negativeone.app.persistence.InvTypeRepository;
 import xyz.negativeone.app.persistence.MarketGroupRepository;
+import xyz.negativeone.app.persistence.MarketOrderRepository;
 import xyz.negativeone.app.persistence.MessageRepository;
 import xyz.negativeone.app.persistence.PriceRepository;
 import xyz.negativeone.app.persistence.UserRepository;
 import xyz.negativeone.app.solver.solvers.ComparePriceSolver;
+import xyz.negativeone.app.solver.solvers.GetOrderBookSolver;
 import xyz.negativeone.app.solver.solvers.ISolver;
 import xyz.negativeone.app.solver.solvers.ListMarketGroupsSolver;
 import xyz.negativeone.app.solver.solvers.ListTypesSolver;
@@ -37,6 +39,7 @@ public class SolverDispatcher extends QueryParser {
 			SessionService sessions,
 			MarketGroupRepository marketGroups,
 			InvTypeRepository invTypes,
+			MarketOrderRepository marketOrders,
 			JsonMapper jsonMapper) {
 
 		solvers.add(new SendMessageSolver(messages));
@@ -47,6 +50,7 @@ public class SolverDispatcher extends QueryParser {
 		solvers.add(new LogoutSolver(sessions));
 		solvers.add(new ListMarketGroupsSolver(marketGroups, jsonMapper));
 		solvers.add(new ListTypesSolver(invTypes, jsonMapper));
+		solvers.add(new GetOrderBookSolver(marketOrders, jsonMapper));
 	}
 
 	@Override
