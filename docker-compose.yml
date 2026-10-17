@@ -12,10 +12,15 @@ services:
     restart: always
     ports:
       - "127.0.0.1:8080:8080"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    networks:
+      - default
+      - postgres_default
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+
+networks:
+  postgres_default:
+    external: true
