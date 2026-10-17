@@ -28,12 +28,12 @@ public class ClientController {
 		this.jsonMapper = jsonMapper;
 	}
 
-	@GetMapping("/api")
+	@GetMapping({ "/api", "/api/" })
 	public ResponseEntity<?> get(@RequestParam Map<String, String> allParams) {
 		return handleRequest(allParams, HttpMethod.GET);
 	}
 
-	@PostMapping("/api")
+	@PostMapping({ "/api", "/api/" })
 	public ResponseEntity<?> post(@RequestParam Map<String, String> allParams) {
 		return handleRequest(allParams, HttpMethod.POST);
 	}

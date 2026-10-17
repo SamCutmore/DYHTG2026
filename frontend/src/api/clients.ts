@@ -1,10 +1,10 @@
 import axios from 'axios'
 import type { Message } from './types'
 
-const api = axios.create({ baseURL: '/api' })
+const api = axios.create({ baseURL: '/' })
 
 export async function sendMessage(message: string): Promise<void> {
-  await api.post('', null, {
+  await api.post('/api', null, {
     params: { q: `sendMessage: ${message}` },
   })
 }
@@ -18,7 +18,7 @@ function toIso(value: string): string {
 }
 
 export async function readMessages(from: string, to: string): Promise<Message[]> {
-  const { data } = await api.get<Message[]>('', {
+  const { data } = await api.get<Message[]>('/api', {
     params: { q: `readMessages: ${toIso(from)}|${toIso(to)}` },
   })
   return data
