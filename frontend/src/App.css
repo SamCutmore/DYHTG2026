@@ -265,3 +265,58 @@
 .error {
   color: #b00020;
 }
+.orders-panel {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.orders-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.orders-toolbar button,
+.orders-panel button,
+.orders-panel select {
+  font: inherit;
+  padding: 8px 12px;
+}
+
+.orders-toolbar button[aria-current='page'] {
+  border: 2px solid var(--accent);
+}
+
+.orders-panel .message-form {
+  justify-content: flex-start;
+}
+
+.orders-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.orders-table th,
+.orders-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.orders-table caption {
+  padding: 12px;
+  text-align: left;
+}
+
+.orders-panel button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}

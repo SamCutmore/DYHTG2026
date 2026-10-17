@@ -5,6 +5,7 @@ import type {
   MarketGroup,
   MarketOrder,
   Message,
+  MyOrder,
   MyTransaction,
   OrderBook,
 } from './types'
@@ -117,6 +118,14 @@ export async function listMyOrders(token: string): Promise<MarketOrder[]> {
 export async function listMyTransactions(token: string): Promise<MyTransaction[]> {
   const { data } = await api.get<MyTransaction[]>('/api', {
     params: { q: `listMyTransactions: ${token}` },
+  })
+  return data
+}
+
+/** Account UI: all of the user's buy orders (with typeName). */
+export async function getMyOrders(token: string): Promise<MyOrder[]> {
+  const { data } = await api.get<MyOrder[]>('/api', {
+    params: { q: `getMyOrders: ${token}` },
   })
   return data
 }
