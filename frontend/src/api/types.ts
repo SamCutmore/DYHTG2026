@@ -41,6 +41,24 @@ export type MarketOrder = {
   ownerRef: string | null
   userId: number | null
   expiresAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type MarketFill = {
+  fillId: number
+  typeId: number
+  locationId: number
+  buyOrderId: number
+  sellOrderId: number
+  price: number
+  quantity: number
+  filledAt: string
+}
+
+export type MyTransaction = {
+  order: MarketOrder
+  fills: MarketFill[]
 }
 
 export type OrderBook = {

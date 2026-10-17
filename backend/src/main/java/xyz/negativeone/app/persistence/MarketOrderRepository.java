@@ -35,18 +35,24 @@ public class MarketOrderRepository {
 				rs.getString("owner_kind"),
 				rs.getString("owner_ref"),
 				userId,
-				expiresAt);
+				expiresAt,
+				rs.getTimestamp("created_at").toInstant(),
+				rs.getTimestamp("updated_at").toInstant());
 	};
 
+	private static final String COLUMNS = """
+			order_id, type_id, location_id, source_id, side, price, quantity,
+			quantity_initial, status, external_url, owner_kind, owner_ref,
+			user_id, expires_at, created_at, updated_at
+			""";
+
 	private static final String OPEN_SELECT = """
-			SELECT order_id, type_id, location_id, source_id, side, price, quantity,
-			       quantity_initial, status, external_url, owner_kind, owner_ref,
-			       user_id, expires_at
+			SELECT %s
 			FROM market_orders
 			WHERE type_id = ? AND location_id = ?
 			  AND side = ? AND status IN ('open', 'partial') AND quantity > 0
 			  AND (expires_at IS NULL OR expires_at > ?)
-			""";
+			""".formatted(COLUMNS);
 
 	private final JdbcTemplate jdbc;
 
@@ -133,5 +139,45 @@ public class MarketOrderRepository {
 				locationId,
 				findOpenBuys(typeId, locationId),
 				findOpenSells(typeId, locationId));
+	}
+
+	public List<MarketOrderRecord> findOpenByUserId(int userId) {
+		Instant now = Instant.now();
+		cancelExpired(now);
+		return jdbc.query(
+				"""
+				SELECT %s
+				FROM market_orders
+				WHERE user_id = ?
+				  AND status IN ('open', 'partial')
+				  AND quantity > 0
+				  AND (expires_at IS NULL OR expires_at > ?)
+				ORDER BY created_at DESC, order_id DESC
+				""".formatted(COLUMNS),
+				MAPPER,
+				userId,
+				Timestamp.from(now));
+	}
+
+	/**
+	 * Transaction history.
+	 */
+	public List<MarketOrderRecord> findHistoricalByUserId(int userId) {
+		Instant now = Instant.now();
+		cancelExpired(now);
+		return jdbc.query(
+				"""
+				SELECT %s
+				FROM market_orders
+				WHERE user_id = ?
+				  AND (
+				    status IN ('filled', 'cancelled')
+				    OR (expires_at IS NOT NULL AND expires_at <= ?)
+				  )
+				ORDER BY updated_at DESC, order_id DESC
+				""".formatted(COLUMNS),
+				MAPPER,
+				userId,
+				Timestamp.from(now));
 	}
 }
