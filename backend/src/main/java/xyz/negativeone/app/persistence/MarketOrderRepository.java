@@ -139,11 +139,18 @@ public class MarketOrderRepository {
 		return jdbc.query(
 				"""
 				SELECT o.order_id, o.type_id, t.type_name, o.price,
-					o.quantity, o.quantity_initial, o.status, o.created_at
+					o.quantity, o.quantity_initial, o.created_at,
+					CASE
+						WHEN o.status IN ('open', 'partial')
+								AND o.expires_at IS NOT NULL
+								AND o.expires_at <= ?
+						THEN 'cancelled'
+						ELSE o.status
+					END AS status
 				FROM market_orders o
 				JOIN inv_types t ON t.type_id = o.type_id
 				WHERE o.owner_kind = 'user'
-				AND o.owner_ref = ?
+				AND o.user_id = ?
 				AND o.side = 'buy'
 				ORDER BY o.created_at DESC, o.order_id DESC
 				""",
@@ -156,6 +163,7 @@ public class MarketOrderRepository {
 						rs.getInt("quantity_initial"),
 						rs.getString("status"),
 						rs.getTimestamp("created_at").toInstant().toString()),
-				Integer.toString(userId));
+				Timestamp.from(Instant.now()),
+				userId);
 	}
 }
