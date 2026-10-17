@@ -12,14 +12,21 @@ import xyz.negativeone.app.persistence.MessageRepository;
 import xyz.negativeone.app.solver.solvers.ISolver;
 import xyz.negativeone.app.solver.solvers.ReadMessagesSolver;
 import xyz.negativeone.app.solver.solvers.SendMessageSolver;
+import xyz.negativeone.app.persistence.PriceRepository;
+import xyz.negativeone.app.solver.solvers.ComparePriceSolver;
 
 @Component
 public class SolverDispatcher extends QueryParser {
 	private final List<ISolver> solvers = new ArrayList<>();
 
-	public SolverDispatcher(MessageRepository messages, JsonMapper jsonMapper) {
+	public SolverDispatcher(
+        MessageRepository messages,
+        PriceRepository prices,
+        JsonMapper jsonMapper) {
+
 		solvers.add(new SendMessageSolver(messages));
 		solvers.add(new ReadMessagesSolver(messages, jsonMapper));
+		solvers.add(new ComparePriceSolver(prices));
 	}
 
 	@Override

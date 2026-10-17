@@ -1,4 +1,3 @@
-
 CREATE TABLE IF NOT EXISTS messages (
     id BIGSERIAL PRIMARY KEY,
     site TEXT NOT NULL,
