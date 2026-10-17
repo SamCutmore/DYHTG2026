@@ -7,7 +7,6 @@ import java.util.regex.Matcher;
 import org.springframework.stereotype.Component;
 
 import tools.jackson.databind.json.JsonMapper;
-
 import xyz.negativeone.app.auth.SessionService;
 import xyz.negativeone.app.market.MarketMaker;
 import xyz.negativeone.app.password.PasswordCredentialService;
@@ -20,6 +19,7 @@ import xyz.negativeone.app.persistence.PriceRepository;
 import xyz.negativeone.app.persistence.UserRepository;
 import xyz.negativeone.app.solver.solvers.ComparePriceSolver;
 import xyz.negativeone.app.solver.solvers.GetHistorySolver;
+import xyz.negativeone.app.solver.solvers.GetMyOrdersSolver;
 import xyz.negativeone.app.solver.solvers.GetOrderBookSolver;
 import xyz.negativeone.app.solver.solvers.ISolver;
 import xyz.negativeone.app.solver.solvers.ListMarketGroupsSolver;
@@ -59,6 +59,7 @@ public class SolverDispatcher extends QueryParser {
 		solvers.add(new GetOrderBookSolver(marketOrders, jsonMapper));
 		solvers.add(new GetHistorySolver(marketHistory, jsonMapper));
 		solvers.add(new PlaceBuyOrderSolver(sessions, invTypes, marketOrders, marketMaker, jsonMapper));
+		solvers.add(new GetMyOrdersSolver(sessions, marketOrders, jsonMapper));
 	}
 
 	@Override
