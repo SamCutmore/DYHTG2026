@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { readMessages, sendMessage } from './api/clients'
-import type { Message } from './api/types'
+import type { InvType, Message } from './api/types'
 import Sidebar from './Sidebar.tsx'
 import './App.css'
 
@@ -10,6 +10,7 @@ function App() {
   const [to, setTo] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
   const [search, setSearch] = useState('')
+  const [selectedType, setSelectedType] = useState<InvType | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const filteredMessages = messages.filter((row) =>
@@ -46,12 +47,21 @@ function App() {
     <div className="app-shell">
       <Sidebar
         search={search}
-        messages={filteredMessages}
+        selectedTypeId={selectedType?.typeId ?? null}
         onSearchChange={setSearch}
+        onSelectType={setSelectedType}
       />
 
       <main id="center">
-        <h1>Orders</h1>
+        <h1>{selectedType ? selectedType.typeName : 'Orders'}</h1>
+        {selectedType ? (
+          <p className="selected-type-meta">
+            Type {selectedType.typeId}
+            {selectedType.basePrice != null
+              ? ` · base £${selectedType.basePrice}`
+              : ''}
+          </p>
+        ) : null}
 
         <div className="message-form">
           <label>

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { LoginResponse, Message } from './types'
+import type { InvType, LoginResponse, MarketGroup, Message } from './types'
 
 const api = axios.create({ baseURL: '/' })
 
@@ -54,4 +54,20 @@ export async function logout(token: string): Promise<void> {
   if (data !== 'OK') {
     throw new Error('Logout failed')
   }
+}
+
+export async function listMarketGroups(
+  parent: 'root' | number = 'root',
+): Promise<MarketGroup[]> {
+  const { data } = await api.get<MarketGroup[]>('/api', {
+    params: { q: `listMarketGroups: ${parent}` },
+  })
+  return data
+}
+
+export async function listTypes(groupId: number): Promise<InvType[]> {
+  const { data } = await api.get<InvType[]>('/api', {
+    params: { q: `listTypes: ${groupId}` },
+  })
+  return data
 }
