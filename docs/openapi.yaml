@@ -587,6 +587,7 @@ components:
           enum: [user, market_maker, external]
         ownerRef: { type: string, nullable: true }
         userId: { type: integer, nullable: true }
+        username: { type: string, nullable: true }
         expiresAt: { type: string, format: date-time, nullable: true }
         createdAt: { type: string, format: date-time }
         updatedAt:

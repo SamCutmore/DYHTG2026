@@ -18,6 +18,7 @@ public record MarketOrderRecord(
     String ownerKind,
     String ownerRef,
     Integer userId,
+    String username,
     Instant expiresAt,
     Instant createdAt,
     Instant updatedAt) {}

@@ -37,6 +37,7 @@ public class MarketOrderRepository {
             rs.getString("owner_kind"),
             rs.getString("owner_ref"),
             userId,
+            rs.getString("username"),
             expiresAt,
             rs.getTimestamp("created_at").toInstant(),
             rs.getTimestamp("updated_at").toInstant());
@@ -46,7 +47,12 @@ public class MarketOrderRepository {
       """
 			order_id, type_id, location_id, source_id, side, price, quantity,
 			quantity_initial, status, external_url, external_listing_id, owner_kind, owner_ref,
-			user_id, expires_at, created_at, updated_at
+			user_id,
+			COALESCE(
+			  (SELECT name FROM users WHERE id = market_orders.user_id),
+			  owner_ref
+			) AS username,
+			expires_at, created_at, updated_at
 			""";
 
   private static final String OPEN_SELECT =
@@ -77,7 +83,9 @@ public class MarketOrderRepository {
 					    type_id, location_id, source_id, side, price, quantity, quantity_initial,
 					    status, external_url, external_listing_id, owner_kind, owner_ref,
 					    user_id, expires_at)
-					VALUES (?, ?, ?, 'buy', ?, ?, ?, 'open', NULL, NULL, 'user', NULL, ?, ?)
+					VALUES (
+					    ?, ?, ?, 'buy', ?, ?, ?, 'open', NULL, NULL, 'user',
+					    (SELECT name FROM users WHERE id = ?), ?, ?)
 					""",
                   new String[] {"order_id"});
           ps.setInt(1, typeId);
@@ -87,7 +95,8 @@ public class MarketOrderRepository {
           ps.setInt(5, quantity);
           ps.setInt(6, quantity);
           ps.setInt(7, userId);
-          ps.setTimestamp(8, Timestamp.from(expiresAt));
+          ps.setInt(8, userId);
+          ps.setTimestamp(9, Timestamp.from(expiresAt));
           return ps;
         },
         keys);
