@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Negativeone API
-  version: 0.0.1
+  version: 0.1.0
   description: |
     All market/auth calls go through a single endpoint:
 
@@ -35,7 +35,6 @@ tags:
   - name: Market
   - name: UserOrders
   - name: SellIngest
-  - name: Deprecated
 
 paths:
   /api/health:
@@ -475,42 +474,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CancelStaleSellOrdersResponse"
-        "400":
-          $ref: "#/components/responses/SolverError"
-
-  /_q/sendMessage:
-    post:
-      tags: [Deprecated]
-      deprecated: true
-      operationId: sendMessage
-      summary: "q=sendMessage: body (deprecated)"
-      responses:
-        "200":
-          description: OK
-        "400":
-          $ref: "#/components/responses/SolverError"
-
-  /_q/readMessages:
-    get:
-      tags: [Deprecated]
-      deprecated: true
-      operationId: readMessages
-      summary: "q=readMessages: from;to (deprecated)"
-      responses:
-        "200":
-          description: Messages
-        "400":
-          $ref: "#/components/responses/SolverError"
-
-  /_q/price:
-    get:
-      tags: [Deprecated]
-      deprecated: true
-      operationId: comparePrice
-      summary: "q=price: … (deprecated compare-price)"
-      responses:
-        "200":
-          description: Legacy price compare
         "400":
           $ref: "#/components/responses/SolverError"
 

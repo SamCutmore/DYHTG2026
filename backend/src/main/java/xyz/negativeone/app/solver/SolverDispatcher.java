@@ -16,13 +16,10 @@ import xyz.negativeone.app.persistence.MarketGroupRepository;
 import xyz.negativeone.app.persistence.MarketHistoryRepository;
 import xyz.negativeone.app.persistence.MarketOrderRepository;
 import xyz.negativeone.app.persistence.MarketPriceRepository;
-import xyz.negativeone.app.persistence.MessageRepository;
-import xyz.negativeone.app.persistence.PriceRepository;
 import xyz.negativeone.app.persistence.UserRepository;
 import xyz.negativeone.app.solver.solvers.CancelOrderSolver;
 import xyz.negativeone.app.solver.solvers.CancelSellOrderSolver;
 import xyz.negativeone.app.solver.solvers.CancelStaleSellOrdersSolver;
-import xyz.negativeone.app.solver.solvers.ComparePriceSolver;
 import xyz.negativeone.app.solver.solvers.EditOrderSolver;
 import xyz.negativeone.app.solver.solvers.EditSellOrderSolver;
 import xyz.negativeone.app.solver.solvers.GetHistorySolver;
@@ -40,19 +37,15 @@ import xyz.negativeone.app.solver.solvers.LogoutSolver;
 import xyz.negativeone.app.solver.solvers.PlaceBuyOrderSolver;
 import xyz.negativeone.app.solver.solvers.PlaceSellOrderSolver;
 import xyz.negativeone.app.solver.solvers.ProtectedSolver;
-import xyz.negativeone.app.solver.solvers.ReadMessagesSolver;
 import xyz.negativeone.app.solver.solvers.RefreshMarketPriceSolver;
 import xyz.negativeone.app.solver.solvers.RegisterSolver;
 import xyz.negativeone.app.solver.solvers.SearchTypesSolver;
-import xyz.negativeone.app.solver.solvers.SendMessageSolver;
 
 @Component
 public class SolverDispatcher extends QueryParser {
   private final List<ISolver> solvers = new ArrayList<>();
 
   public SolverDispatcher(
-      MessageRepository messages,
-      PriceRepository prices,
       UserRepository users,
       PasswordCredentialService credentials,
       SessionService sessions,
@@ -67,9 +60,6 @@ public class SolverDispatcher extends QueryParser {
       IngestTokenService ingestTokens,
       JsonMapper jsonMapper) {
 
-    solvers.add(new SendMessageSolver(messages));
-    solvers.add(new ReadMessagesSolver(messages, jsonMapper));
-    solvers.add(new ComparePriceSolver(prices));
     solvers.add(new RegisterSolver(users, credentials));
     solvers.add(new LoginSolver(users, credentials, sessions, jsonMapper));
     solvers.add(new LogoutSolver(sessions));
