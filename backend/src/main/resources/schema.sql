@@ -169,66 +169,14 @@ INSERT INTO locations (location_id, parent_location_id, location_name, descripti
 SELECT 2, 1, 'London', 'Greater London'
 WHERE NOT EXISTS (SELECT 1 FROM locations WHERE location_id = 2);
 
-INSERT INTO market_groups (market_group_id, parent_group_id, market_group_name, description, has_types)
-SELECT 10, NULL, 'Electronics', 'Consumer electronics', FALSE
-WHERE NOT EXISTS (SELECT 1 FROM market_groups WHERE market_group_id = 10);
+INSERT INTO locations (location_id, parent_location_id, location_name, description)
+SELECT 3, NULL, 'EU', 'European Union (cross-border)'
+WHERE NOT EXISTS (SELECT 1 FROM locations WHERE location_id = 3);
 
-INSERT INTO market_groups (market_group_id, parent_group_id, market_group_name, description, has_types)
-SELECT 11, 10, 'Phones', 'Mobile phones', FALSE
-WHERE NOT EXISTS (SELECT 1 FROM market_groups WHERE market_group_id = 11);
+INSERT INTO locations (location_id, parent_location_id, location_name, description)
+SELECT 4, 3, 'Germany', 'Germany'
+WHERE NOT EXISTS (SELECT 1 FROM locations WHERE location_id = 4);
 
-INSERT INTO market_groups (market_group_id, parent_group_id, market_group_name, description, has_types)
-SELECT 12, 11, 'Apple', 'Apple phones', TRUE
-WHERE NOT EXISTS (SELECT 1 FROM market_groups WHERE market_group_id = 12);
-
-INSERT INTO inv_types (type_id, type_name, description, base_price, published, market_group_id)
-SELECT 1001, 'iPhone 13 128GB', 'Used iPhone 13 128GB', 180.00, TRUE, 12
-WHERE NOT EXISTS (SELECT 1 FROM inv_types WHERE type_id = 1001);
-
--- Order books examples
-
-INSERT INTO market_orders (
-    type_id, location_id, source_id, side, price, quantity, quantity_initial,
-    status, external_url, external_listing_id, owner_kind, owner_ref)
-SELECT 1001, 1, 1, 'sell', 210.00, 1, 1, 'open',
-       'https://www.ebay.co.uk/itm/demo-iphone-high', 'demo-sell-high', 'external', NULL
-WHERE NOT EXISTS (SELECT 1 FROM market_orders WHERE external_listing_id = 'demo-sell-high');
-
-INSERT INTO market_orders (
-    type_id, location_id, source_id, side, price, quantity, quantity_initial,
-    status, external_url, external_listing_id, owner_kind, owner_ref)
-SELECT 1001, 1, 2, 'sell', 195.00, 1, 1, 'open',
-       'https://www.vinted.co.uk/items/demo-iphone', 'demo-sell-ask', 'external', NULL
-WHERE NOT EXISTS (SELECT 1 FROM market_orders WHERE external_listing_id = 'demo-sell-ask');
-
-INSERT INTO market_orders (
-    type_id, location_id, source_id, side, price, quantity, quantity_initial,
-    status, external_url, external_listing_id, owner_kind, owner_ref)
-SELECT 1001, 1, 6, 'buy', 170.00, 1, 1, 'open',
-       NULL, NULL, 'market_maker', 'seed-buy-low'
-WHERE NOT EXISTS (
-    SELECT 1 FROM market_orders WHERE owner_ref = 'seed-buy-low' AND side = 'buy');
-
-INSERT INTO market_orders (
-    type_id, location_id, source_id, side, price, quantity, quantity_initial,
-    status, external_url, external_listing_id, owner_kind, owner_ref)
-SELECT 1001, 1, 6, 'buy', 185.00, 1, 1, 'open',
-       NULL, NULL, 'market_maker', 'seed-buy-best'
-WHERE NOT EXISTS (
-    SELECT 1 FROM market_orders WHERE owner_ref = 'seed-buy-best' AND side = 'buy');
-
--- Demo history for type 1001 @ UK
-INSERT INTO market_history (location_id, type_id, date, low_price, high_price, avg_price, volume, orders)
-SELECT 1, 1001, DATE '2026-10-14', 175.00, 205.00, 190.00, 12, 8
-WHERE NOT EXISTS (
-    SELECT 1 FROM market_history WHERE location_id = 1 AND type_id = 1001 AND date = DATE '2026-10-14');
-
-INSERT INTO market_history (location_id, type_id, date, low_price, high_price, avg_price, volume, orders)
-SELECT 1, 1001, DATE '2026-10-15', 178.00, 200.00, 188.50, 9, 6
-WHERE NOT EXISTS (
-    SELECT 1 FROM market_history WHERE location_id = 1 AND type_id = 1001 AND date = DATE '2026-10-15');
-
-INSERT INTO market_history (location_id, type_id, date, low_price, high_price, avg_price, volume, orders)
-SELECT 1, 1001, DATE '2026-10-16', 172.00, 198.00, 185.00, 15, 11
-WHERE NOT EXISTS (
-    SELECT 1 FROM market_history WHERE location_id = 1 AND type_id = 1001 AND date = DATE '2026-10-16');
+INSERT INTO locations (location_id, parent_location_id, location_name, description)
+SELECT 5, 3, 'France', 'France'
+WHERE NOT EXISTS (SELECT 1 FROM locations WHERE location_id = 5);

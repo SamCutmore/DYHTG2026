@@ -1,4 +1,3 @@
-
 package xyz.negativeone.app.persistence;
 
 import java.util.List;
@@ -12,14 +11,15 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class PriceRepository {
 
-    private final JdbcTemplate jdbc;
+  private final JdbcTemplate jdbc;
 
-    public PriceRepository(JdbcTemplate jdbc) {
-        this.jdbc = jdbc;
-    }
+  public PriceRepository(JdbcTemplate jdbc) {
+    this.jdbc = jdbc;
+  }
 
-    public List<PriceRecord> findCheapest(String name) {
-        String sql = """
+  public List<PriceRecord> findCheapest(String name) {
+    String sql =
+        """
             SELECT id, name, site, price, location
             FROM prices
             WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))
@@ -27,21 +27,21 @@ public class PriceRepository {
             LIMIT 1
             """;
 
-        return jdbc.query(sql, (rs, rowNum) ->
+    return jdbc.query(
+        sql,
+        (rs, rowNum) ->
             new PriceRecord(
                 rs.getLong("id"),
                 rs.getString("name"),
                 rs.getString("site"),
                 rs.getBigDecimal("price"),
-                rs.getString("location")
-            ), name);
-    }
-    public void checkDatabase() {
-        Integer count = jdbc.queryForObject(
-            "SELECT COUNT(*) FROM prices",
-            Integer.class
-        );
+                rs.getString("location")),
+        name);
+  }
 
-        System.out.println("Number of records: " + count);
-    }
+  public void checkDatabase() {
+    Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM prices", Integer.class);
+
+    System.out.println("Number of records: " + count);
+  }
 }

@@ -5,16 +5,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 /** Ported from SPRE PasswordManagement.PasswordManager. */
 public class PasswordManager {
-	private static final PasswordEncoder encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
+  private static final PasswordEncoder encoder =
+      Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
 
-	public String encodePassword(String password) {
-		return encoder.encode(password);
-	}
+  public String encodePassword(String password) {
+    return encoder.encode(password);
+  }
 
-	public boolean matches(String rawPassword, String encodedPassword) {
-		if (null == encodedPassword || encodedPassword.isEmpty()) {
-			return false;
-		}
-		return encoder.matches(rawPassword, encodedPassword);
-	}
+  public boolean matches(String rawPassword, String encodedPassword) {
+    if (null == encodedPassword || encodedPassword.isEmpty()) {
+      return false;
+    }
+    return encoder.matches(rawPassword, encodedPassword);
+  }
 }

@@ -1,10 +1,8 @@
-
 package xyz.negativeone.app.solver.solvers;
 
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import xyz.negativeone.app.persistence.PriceRecord;
 import xyz.negativeone.app.persistence.PriceRepository;
 import xyz.negativeone.app.solver.Query;
@@ -15,49 +13,41 @@ import xyz.negativeone.app.solver.Query;
 @Deprecated(since = "0.0.1", forRemoval = false)
 public class ComparePriceSolver implements ISolver {
 
-    private final PriceRepository repository;
+  private final PriceRepository repository;
 
-    public ComparePriceSolver(PriceRepository repository) {
-        this.repository = repository;
+  public ComparePriceSolver(PriceRepository repository) {
+    this.repository = repository;
+  }
+
+  @Override
+  public Matcher match(Query query) {
+
+    if (!query.token().equalsIgnoreCase("price")) {
+      return null;
     }
 
-    @Override
-    public Matcher match(Query query) {
+    Pattern pattern = Pattern.compile("compare price of (.+)", Pattern.CASE_INSENSITIVE);
 
-        if (!query.token().equalsIgnoreCase("price")) {
-            return null;
-        }
+    Matcher matcher = pattern.matcher(query.question());
 
-        Pattern pattern = Pattern.compile(
-            "compare price of (.+)",
-            Pattern.CASE_INSENSITIVE
-        );
+    return matcher.matches() ? matcher : null;
+  }
 
-        Matcher matcher = pattern.matcher(query.question());
+  @Override
+  public String solve(Matcher matcher) {
+    repository.checkDatabase();
+    String productName = matcher.group(1).trim();
 
-        return matcher.matches() ? matcher : null;
+    List<PriceRecord> results = repository.findCheapest(productName);
+
+    if (results.isEmpty()) {
+      return "Product not found";
     }
 
-    @Override
-    public String solve(Matcher matcher) {
-        repository.checkDatabase();
-        String productName = matcher.group(1).trim();
+    PriceRecord cheapest = results.get(0);
 
-        List<PriceRecord> results =
-            repository.findCheapest(productName);
-
-        if (results.isEmpty()) {
-            return "Product not found";
-        }
-
-        PriceRecord cheapest = results.get(0);
-
-        return String.format(
-            "Cheapest %s: %s at £%s (ID: %d)",
-            cheapest.name(),
-            cheapest.site(),
-            cheapest.price(),
-            cheapest.id()
-        );
-    }
+    return String.format(
+        "Cheapest %s: %s at £%s (ID: %d)",
+        cheapest.name(), cheapest.site(), cheapest.price(), cheapest.id());
+  }
 }

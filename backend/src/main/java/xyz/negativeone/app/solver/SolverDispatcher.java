@@ -3,9 +3,7 @@ package xyz.negativeone.app.solver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
-
 import org.springframework.stereotype.Component;
-
 import tools.jackson.databind.json.JsonMapper;
 import xyz.negativeone.app.auth.IngestTokenService;
 import xyz.negativeone.app.auth.SessionService;
@@ -49,85 +47,82 @@ import xyz.negativeone.app.solver.solvers.SendMessageSolver;
 
 @Component
 public class SolverDispatcher extends QueryParser {
-	private final List<ISolver> solvers = new ArrayList<>();
+  private final List<ISolver> solvers = new ArrayList<>();
 
-	public SolverDispatcher(
-			MessageRepository messages,
-			PriceRepository prices,
-			UserRepository users,
-			PasswordCredentialService credentials,
-			SessionService sessions,
-			MarketGroupRepository marketGroups,
-			InvTypeRepository invTypes,
-			LocationRepository locations,
-			MarketOrderRepository marketOrders,
-			MarketHistoryRepository marketHistory,
-			MarketFillRepository marketFills,
-			MarketPriceRepository marketPrices,
-			MarketMaker marketMaker,
-			IngestTokenService ingestTokens,
-			JsonMapper jsonMapper) {
+  public SolverDispatcher(
+      MessageRepository messages,
+      PriceRepository prices,
+      UserRepository users,
+      PasswordCredentialService credentials,
+      SessionService sessions,
+      MarketGroupRepository marketGroups,
+      InvTypeRepository invTypes,
+      LocationRepository locations,
+      MarketOrderRepository marketOrders,
+      MarketHistoryRepository marketHistory,
+      MarketFillRepository marketFills,
+      MarketPriceRepository marketPrices,
+      MarketMaker marketMaker,
+      IngestTokenService ingestTokens,
+      JsonMapper jsonMapper) {
 
-		solvers.add(new SendMessageSolver(messages));
-		solvers.add(new ReadMessagesSolver(messages, jsonMapper));
-		solvers.add(new ComparePriceSolver(prices));
-		solvers.add(new RegisterSolver(users, credentials));
-		solvers.add(new LoginSolver(users, credentials, sessions, jsonMapper));
-		solvers.add(new LogoutSolver(sessions));
-		solvers.add(new ListMarketGroupsSolver(marketGroups, jsonMapper));
-		solvers.add(new ListTypesSolver(invTypes, jsonMapper));
-		solvers.add(new ListLocationsSolver(locations, jsonMapper));
-		solvers.add(new GetOrderBookSolver(marketOrders, jsonMapper));
-		solvers.add(new GetHistorySolver(marketHistory, jsonMapper));
-		solvers.add(new GetMarketPriceSolver(marketPrices, jsonMapper));
-		solvers.add(new RefreshMarketPriceSolver(invTypes, marketPrices, jsonMapper));
-		solvers.add(new PlaceBuyOrderSolver(sessions, invTypes, marketOrders, marketMaker, jsonMapper));
-		solvers.add(new CancelOrderSolver(sessions, marketOrders, jsonMapper));
-		solvers.add(new EditOrderSolver(sessions, marketOrders, marketMaker, jsonMapper));
-		solvers.add(new PlaceSellOrderSolver(ingestTokens, invTypes, marketOrders, marketMaker, jsonMapper));
-		solvers.add(new EditSellOrderSolver(ingestTokens, marketOrders, marketMaker, jsonMapper));
-		solvers.add(new CancelSellOrderSolver(ingestTokens, marketOrders, jsonMapper));
-		solvers.add(new CancelStaleSellOrdersSolver(ingestTokens, marketOrders, jsonMapper));
-		solvers.add(new ListMyOrdersSolver(sessions, marketOrders, jsonMapper));
-		solvers.add(new ListMyTransactionsSolver(sessions, marketOrders, marketFills, jsonMapper));
-		solvers.add(new GetMyOrdersSolver(sessions, marketOrders, jsonMapper));
-	}
+    solvers.add(new SendMessageSolver(messages));
+    solvers.add(new ReadMessagesSolver(messages, jsonMapper));
+    solvers.add(new ComparePriceSolver(prices));
+    solvers.add(new RegisterSolver(users, credentials));
+    solvers.add(new LoginSolver(users, credentials, sessions, jsonMapper));
+    solvers.add(new LogoutSolver(sessions));
+    solvers.add(new ListMarketGroupsSolver(marketGroups, jsonMapper));
+    solvers.add(new ListTypesSolver(invTypes, jsonMapper));
+    solvers.add(new ListLocationsSolver(locations, jsonMapper));
+    solvers.add(new GetOrderBookSolver(marketOrders, jsonMapper));
+    solvers.add(new GetHistorySolver(marketHistory, jsonMapper));
+    solvers.add(new GetMarketPriceSolver(marketPrices, jsonMapper));
+    solvers.add(new RefreshMarketPriceSolver(invTypes, marketPrices, jsonMapper));
+    solvers.add(new PlaceBuyOrderSolver(sessions, invTypes, marketOrders, marketMaker, jsonMapper));
+    solvers.add(new CancelOrderSolver(sessions, marketOrders, jsonMapper));
+    solvers.add(new EditOrderSolver(sessions, marketOrders, marketMaker, jsonMapper));
+    solvers.add(
+        new PlaceSellOrderSolver(ingestTokens, invTypes, marketOrders, marketMaker, jsonMapper));
+    solvers.add(new EditSellOrderSolver(ingestTokens, marketOrders, marketMaker, jsonMapper));
+    solvers.add(new CancelSellOrderSolver(ingestTokens, marketOrders, jsonMapper));
+    solvers.add(new CancelStaleSellOrdersSolver(ingestTokens, marketOrders, jsonMapper));
+    solvers.add(new ListMyOrdersSolver(sessions, marketOrders, jsonMapper));
+    solvers.add(new ListMyTransactionsSolver(sessions, marketOrders, marketFills, jsonMapper));
+    solvers.add(new GetMyOrdersSolver(sessions, marketOrders, jsonMapper));
+  }
 
-	@Override
-	public String solve(String question) throws IllegalArgumentException {
-		Query q = super.parse(question);
-		Matcher m;
-		for (ISolver solver : solvers) {
-			m = solver.match(q);
-			if (null == m)
-				continue;
-			return solver.solve(m);
-		}
-		return null;
-	}
+  @Override
+  public String solve(String question) throws IllegalArgumentException {
+    Query q = super.parse(question);
+    Matcher m;
+    for (ISolver solver : solvers) {
+      m = solver.match(q);
+      if (null == m) continue;
+      return solver.solve(m);
+    }
+    return null;
+  }
 
-	/**
-	 * Protect secrets for logging.
-	 */
-	public String describeForLog(String question) {
-		if (question == null || question.isBlank()) {
-			return "";
-		}
-		try {
-			Query q = super.parse(question);
-			for (ISolver solver : solvers) {
-				if (solver.match(q) == null) {
-					continue;
-				}
-				if (solver instanceof ProtectedSolver protectedSolver) {
-					return protectedSolver.sanitizeForLog(q);
-				}
-				return question;
-			}
-		}
-		catch (IllegalArgumentException ignored) {
-			return "(unparsed)";
-		}
-		return question;
-	}
+  /** Protect secrets for logging. */
+  public String describeForLog(String question) {
+    if (question == null || question.isBlank()) {
+      return "";
+    }
+    try {
+      Query q = super.parse(question);
+      for (ISolver solver : solvers) {
+        if (solver.match(q) == null) {
+          continue;
+        }
+        if (solver instanceof ProtectedSolver protectedSolver) {
+          return protectedSolver.sanitizeForLog(q);
+        }
+        return question;
+      }
+    } catch (IllegalArgumentException ignored) {
+      return "(unparsed)";
+    }
+    return question;
+  }
 }

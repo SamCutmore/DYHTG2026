@@ -7,8 +7,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class PasswordConfiguration {
 
-	@Bean
-	public PasswordManager passwordManager() {
-		return new PasswordManager();
-	}
+  @Bean
+  public PasswordManager passwordManager() {
+    return new PasswordManager();
+  }
 }
