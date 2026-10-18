@@ -4,23 +4,28 @@
 
 | Component | AI usage |
 |-----------|----------|
+| Pipeline  |    1     |
 | Backend   |    1     |
 | Database  |    1     |
 | Frontend  |    4     |
 
+### Pipeline
+
+GitHub actions, cron jobs, optools and management of secrets was directed by principles learned from Software Product Release Engineering (SPRE).
+
 ### Backend
 
-Backend Spring Boot server was implemented using principles learned from Software Product Release Engineering (SPRE) and ExtremeStartup skills. GET/POST queries currently route through the same endpoint, logging redacts secrets, and query solvers are implemented using interface contracts that allows for modular implementation by matching them to queries using Regular Expressions.
+Backend Spring Boot server was implemented using principles learned from Software Product Release Engineering (SPRE) and ExtremeStartup skills. GET/POST queries currently route through the same endpoint, logging redacts secrets, and queries are handled by dispatching them to solvers via matching Regular Expressions using interfaces, inheritance and annotation that allows for modular implementation.
 
 ### Database
 
-Catalogue tables follow the EVE Online market relational model [via Fuzzwork SDE dumps](https://www.fuzzwork.co.uk/dump/), remodelled for this project. Order book, fills, auth, and sources were modelled within that relationship map.
+Catalogue tables follow the EVE Online market relational model [via Fuzzwork SDE dumps](https://www.fuzzwork.co.uk/dump/) remodelled for this project. Order book, fills, auth, and sources were modelled within carefully selected slices of that relationship map.
 
 This relational mapping is appropriate due to the tree structure allowing for sparse procedural queries that are efficient for both the Frontend and Backend services.
 
 ### Frontend
 
-Frontend made heavy use of generative AI to quickly scaffold, experiment and create user interfaces excluding the `frontend/src/api/clients.ts` + `types.ts` API layers. This allowed greater participation from inexperienced and new students where the tradeoff was seen as acceptable due to the robust and secure implementation of the Spring Boot API layer where the React application is a thin UX/UI layer that performs requests that can be achieved using Curl or Postman.
+Frontend made heavy use of generative AI to quickly scaffold, experiment and create user interfaces excluding the `frontend/src/api/clients.ts` + `types.ts` API layers. This allowed participation from inexperienced and new team members where the tradeoff was considered acceptable due to the robust and secure implementation of the Spring Boot API layer. The React application is a thin UX/UI layer that performs requests that can be achieved using Curl or Postman.
 
 ## Overview
 
