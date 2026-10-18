@@ -61,6 +61,17 @@ export type MyTransaction = {
   fills: MarketFill[]
 }
 
+export type MarketHistory = {
+  locationId: number
+  typeId: number
+  date: string
+  lowPrice: number
+  highPrice: number
+  avgPrice: number
+  volume: number
+  orders: number
+}
+
 export type OrderBook = {
   typeId: number
   buys: MarketOrder[]

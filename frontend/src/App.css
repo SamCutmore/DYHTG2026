@@ -309,6 +309,51 @@
 .error {
   color: #b00020;
 }
+
+.price-chart {
+  margin: 0;
+  width: 100%;
+  max-width: 56rem;
+
+  figcaption {
+    padding-bottom: 10px;
+    font-size: 0.9rem;
+  }
+
+  svg {
+    width: 100%;
+    height: auto;
+  }
+
+  .chart-grid {
+    stroke: var(--border);
+  }
+
+  .chart-label {
+    fill: var(--text);
+    font-size: 12px;
+  }
+
+  .chart-band {
+    fill: var(--accent-bg);
+  }
+
+  .chart-line {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2.5;
+  }
+
+  .chart-dot {
+    fill: var(--accent);
+    cursor: pointer;
+  }
+
+  .chart-tooltip {
+    padding-top: 8px;
+    color: var(--text-h);
+  }
+}
 .orders-panel {
   width: 100%;
   min-width: 0;
