@@ -178,7 +178,10 @@ export default function MarketOrders({
   refreshToken?: number
   /** After placeBuyOrder — flash this row if it appears in the buy book. */
   highlightBuyOrderId?: number | null
-  onBuyFromAsk: (defaults: BuyOrderDefaults) => void
+  onBuyFromAsk: (
+    defaults: BuyOrderDefaults,
+    offerLocationId: number,
+  ) => void
   onNeedLogin: () => void
   onHighlightBuyConsumed?: () => void
   onPlaceBuy: () => void
@@ -356,10 +359,13 @@ export default function MarketOrders({
                       onNeedLogin()
                       return
                     }
-                    onBuyFromAsk({
-                      price: String(offer.price),
-                      quantity: String(offer.quantity),
-                    })
+                    onBuyFromAsk(
+                      {
+                        price: String(offer.price),
+                        quantity: String(offer.quantity),
+                      },
+                      offer.locationId,
+                    )
                   }}
                 >
                   Create buy order…

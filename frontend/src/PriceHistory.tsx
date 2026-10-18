@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { getHistory } from './api/clients'
-import type { MarketHistory } from './api/types'
+import type { Location, MarketHistory } from './api/types'
+import {
+  isWorldLocation,
+  locationScopeIds,
+  WORLD_LOCATION_ID,
+} from './locationScope'
 
 const W = 880
 const H = 340
@@ -29,12 +34,50 @@ function defaultRange(length: number): Range {
   return { start: end - window + 1, end }
 }
 
+function mergeHistoryByDate(
+  typeId: number,
+  books: MarketHistory[],
+): MarketHistory[] {
+  const byDate = new Map<string, MarketHistory[]>()
+  for (const row of books) {
+    const list = byDate.get(row.date) ?? []
+    list.push(row)
+    byDate.set(row.date, list)
+  }
+
+  return [...byDate.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, rows]) => {
+      const volume = rows.reduce((sum, row) => sum + row.volume, 0)
+      const orders = rows.reduce((sum, row) => sum + row.orders, 0)
+      const lowPrice = Math.min(...rows.map((row) => row.lowPrice))
+      const highPrice = Math.max(...rows.map((row) => row.highPrice))
+      const avgPrice =
+        volume > 0
+          ? rows.reduce((sum, row) => sum + row.avgPrice * row.volume, 0) /
+            volume
+          : rows.reduce((sum, row) => sum + row.avgPrice, 0) / rows.length
+      return {
+        locationId: WORLD_LOCATION_ID,
+        typeId,
+        date,
+        lowPrice,
+        highPrice,
+        avgPrice,
+        volume,
+        orders,
+      }
+    })
+}
+
 function PriceHistory({
   typeId,
   locationId,
+  locations = [],
 }: {
   typeId: number
   locationId: number
+  locations?: Pick<Location, 'locationId' | 'parentLocationId'>[]
 }) {
   const [rows, setRows] = useState<MarketHistory[]>([])
   const [loading, setLoading] = useState(true)
@@ -48,16 +91,31 @@ function PriceHistory({
   } | null>(null)
   const navSvgRef = useRef<SVGSVGElement | null>(null)
 
+  const scopeIds = useMemo(
+    () => locationScopeIds(locations, locationId),
+    [locations, locationId],
+  )
+  const scopeKey = scopeIds.join(',')
+
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setError(null)
-    getHistory(typeId, locationId)
-      .then((data) => {
+
+    const ids = isWorldLocation(locationId)
+      ? scopeIds
+      : [locationId]
+
+    Promise.all(ids.map((id) => getHistory(typeId, id)))
+      .then((books) => {
         if (cancelled) return
-        const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date))
-        setRows(sorted)
-        setRange(defaultRange(sorted.length))
+        const merged = isWorldLocation(locationId)
+          ? mergeHistoryByDate(typeId, books.flat())
+          : [...(books[0] ?? [])].sort((a, b) =>
+              a.date.localeCompare(b.date),
+            )
+        setRows(merged)
+        setRange(defaultRange(merged.length))
       })
       .catch(() => {
         if (!cancelled) setError('Could not load price history.')
@@ -68,7 +126,7 @@ function PriceHistory({
     return () => {
       cancelled = true
     }
-  }, [typeId, locationId])
+  }, [typeId, locationId, scopeKey, scopeIds])
 
   const visible = useMemo(() => {
     if (!rows.length) return []

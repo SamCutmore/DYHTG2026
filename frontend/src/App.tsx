@@ -6,6 +6,7 @@ import Sidebar from './Sidebar'
 import ItemWorkspace from './ItemWorkspace'
 import NoticePopup from './NoticePopup'
 import Dashboard from './Dashboard'
+import { WORLD_LOCATION_ID } from './locationScope'
 import { useQuickbar } from './useQuickbar'
 import './App.css'
 
@@ -27,7 +28,7 @@ function App() {
     null,
   )
   const [locations, setLocations] = useState<Location[]>([])
-  const [locationId, setLocationId] = useState(1)
+  const [locationId, setLocationId] = useState(WORLD_LOCATION_ID)
   const quickbar = useQuickbar()
 
   useEffect(() => {
@@ -45,9 +46,10 @@ function App() {
           const flat = nested.flat()
           setLocations(flat)
           setLocationId((current) =>
+            current === WORLD_LOCATION_ID ||
             flat.some((l) => l.locationId === current)
               ? current
-              : (flat[0]?.locationId ?? 1),
+              : WORLD_LOCATION_ID,
           )
         }
       } catch {
@@ -70,8 +72,10 @@ function App() {
 
   const locationName = useMemo(
     () =>
-      locations.find((l) => l.locationId === locationId)?.locationName ??
-      `Location ${locationId}`,
+      locationId === WORLD_LOCATION_ID
+        ? 'World'
+        : (locations.find((l) => l.locationId === locationId)?.locationName ??
+          `Location ${locationId}`),
     [locations, locationId],
   )
 

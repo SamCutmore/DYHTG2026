@@ -4,6 +4,7 @@ import MarketOrders from './MarketOrders'
 import PriceHistory from './PriceHistory'
 import BuyOrderDialog from './BuyOrderDialog'
 import type { BuyOrderDefaults } from './BuyOrderDialog'
+import { isWorldLocation, WORLD_LOCATION_ID } from './locationScope'
 import { TypeIcon } from './typeIcons'
 
 type ItemTab = 'data' | 'history'
@@ -65,14 +66,31 @@ export default function ItemWorkspace({
     return map
   }, [locations])
 
-  function openBuy(defaults?: BuyOrderDefaults) {
+  const [buyLocationId, setBuyLocationId] = useState(locationId)
+
+  function openBuy(
+    defaults?: BuyOrderDefaults,
+    orderLocationId?: number,
+  ) {
     if (!session) {
       onNeedLogin()
       return
     }
+    const target =
+      orderLocationId ??
+      (isWorldLocation(locationId) ? undefined : locationId)
+    if (target == null || isWorldLocation(target)) {
+      onNotice('Choose a specific location to place a buy order.')
+      return
+    }
+    setBuyLocationId(target)
     setBuyDefaults(defaults)
     setBuyOpen(true)
   }
+
+  const buyLocationName =
+    locations.find((loc) => loc.locationId === buyLocationId)?.locationName ??
+    locationName
 
   return (
     <section className="item-workspace">
@@ -124,6 +142,7 @@ export default function ItemWorkspace({
             value={locationId}
             onChange={(event) => onLocationChange(Number(event.target.value))}
           >
+            <option value={WORLD_LOCATION_ID}>World</option>
             {locations.map((loc) => (
               <option key={loc.locationId} value={loc.locationId}>
                 {loc.parentLocationId == null
@@ -150,7 +169,9 @@ export default function ItemWorkspace({
             token={session?.token ?? null}
             refreshToken={marketVersion}
             highlightBuyOrderId={highlightBuyOrderId}
-            onBuyFromAsk={(defaults) => openBuy(defaults)}
+            onBuyFromAsk={(defaults, offerLocationId) =>
+              openBuy(defaults, offerLocationId)
+            }
             onNeedLogin={onNeedLogin}
             onHighlightBuyConsumed={onHighlightBuyConsumed}
             onPlaceBuy={() => openBuy()}
@@ -160,7 +181,11 @@ export default function ItemWorkspace({
             onNotice={onNotice}
           />
         ) : (
-          <PriceHistory typeId={type.typeId} locationId={locationId} />
+          <PriceHistory
+            typeId={type.typeId}
+            locationId={locationId}
+            locations={locations}
+          />
         )}
       </div>
 
@@ -168,8 +193,8 @@ export default function ItemWorkspace({
         <BuyOrderDialog
           typeId={type.typeId}
           typeName={type.typeName}
-          locationId={locationId}
-          locationName={locationName}
+          locationId={buyLocationId}
+          locationName={buyLocationName}
           token={session.token}
           defaults={buyDefaults}
           onClose={() => {
