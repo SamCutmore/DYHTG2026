@@ -284,14 +284,32 @@
   line-height: 1;
 }
 
-@media (max-width: 680px) {
+@media (max-width: 900px) {
   .sidebar {
-    padding: 12px 14px 16px;
+    padding: 10px 12px 12px;
     border-right: 0;
     border-bottom: 1px solid var(--border);
+    min-height: 0;
+  }
+
+  .sidebar-tree {
+    min-height: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .sidebar-scroll {
-    max-height: 240px;
+    max-height: none;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sidebar-quickbar-row,
+  .sidebar-type {
+    min-height: 44px;
   }
 }
