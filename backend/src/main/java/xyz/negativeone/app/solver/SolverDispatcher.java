@@ -11,10 +11,12 @@ import xyz.negativeone.app.auth.SessionService;
 import xyz.negativeone.app.market.MarketMaker;
 import xyz.negativeone.app.password.PasswordCredentialService;
 import xyz.negativeone.app.persistence.InvTypeRepository;
+import xyz.negativeone.app.persistence.LocationRepository;
 import xyz.negativeone.app.persistence.MarketFillRepository;
 import xyz.negativeone.app.persistence.MarketGroupRepository;
 import xyz.negativeone.app.persistence.MarketHistoryRepository;
 import xyz.negativeone.app.persistence.MarketOrderRepository;
+import xyz.negativeone.app.persistence.MarketPriceRepository;
 import xyz.negativeone.app.persistence.MessageRepository;
 import xyz.negativeone.app.persistence.PriceRepository;
 import xyz.negativeone.app.persistence.UserRepository;
@@ -25,9 +27,11 @@ import xyz.negativeone.app.solver.solvers.ComparePriceSolver;
 import xyz.negativeone.app.solver.solvers.EditOrderSolver;
 import xyz.negativeone.app.solver.solvers.EditSellOrderSolver;
 import xyz.negativeone.app.solver.solvers.GetHistorySolver;
+import xyz.negativeone.app.solver.solvers.GetMarketPriceSolver;
 import xyz.negativeone.app.solver.solvers.GetMyOrdersSolver;
 import xyz.negativeone.app.solver.solvers.GetOrderBookSolver;
 import xyz.negativeone.app.solver.solvers.ISolver;
+import xyz.negativeone.app.solver.solvers.ListLocationsSolver;
 import xyz.negativeone.app.solver.solvers.ListMarketGroupsSolver;
 import xyz.negativeone.app.solver.solvers.ListMyOrdersSolver;
 import xyz.negativeone.app.solver.solvers.ListMyTransactionsSolver;
@@ -37,6 +41,7 @@ import xyz.negativeone.app.solver.solvers.LogoutSolver;
 import xyz.negativeone.app.solver.solvers.PlaceBuyOrderSolver;
 import xyz.negativeone.app.solver.solvers.PlaceSellOrderSolver;
 import xyz.negativeone.app.solver.solvers.ReadMessagesSolver;
+import xyz.negativeone.app.solver.solvers.RefreshMarketPriceSolver;
 import xyz.negativeone.app.solver.solvers.RegisterSolver;
 import xyz.negativeone.app.solver.solvers.SendMessageSolver;
 
@@ -52,9 +57,11 @@ public class SolverDispatcher extends QueryParser {
 			SessionService sessions,
 			MarketGroupRepository marketGroups,
 			InvTypeRepository invTypes,
+			LocationRepository locations,
 			MarketOrderRepository marketOrders,
 			MarketHistoryRepository marketHistory,
 			MarketFillRepository marketFills,
+			MarketPriceRepository marketPrices,
 			MarketMaker marketMaker,
 			JsonMapper jsonMapper) {
 
@@ -66,8 +73,11 @@ public class SolverDispatcher extends QueryParser {
 		solvers.add(new LogoutSolver(sessions));
 		solvers.add(new ListMarketGroupsSolver(marketGroups, jsonMapper));
 		solvers.add(new ListTypesSolver(invTypes, jsonMapper));
+		solvers.add(new ListLocationsSolver(locations, jsonMapper));
 		solvers.add(new GetOrderBookSolver(marketOrders, jsonMapper));
 		solvers.add(new GetHistorySolver(marketHistory, jsonMapper));
+		solvers.add(new GetMarketPriceSolver(marketPrices, jsonMapper));
+		solvers.add(new RefreshMarketPriceSolver(invTypes, marketPrices, jsonMapper));
 		solvers.add(new PlaceBuyOrderSolver(sessions, invTypes, marketOrders, marketMaker, jsonMapper));
 		solvers.add(new CancelOrderSolver(sessions, marketOrders, jsonMapper));
 		solvers.add(new EditOrderSolver(sessions, marketOrders, marketMaker, jsonMapper));

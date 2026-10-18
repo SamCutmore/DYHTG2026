@@ -16,6 +16,7 @@ public final class MarketTestFixtures {
 	public static final int SOURCE_APP = 6;
 
 	public static final int LOCATION_ID = 1;
+	public static final int LOCATION_LONDON = 2;
 	public static final int GROUP_ROOT = 10;
 	public static final int GROUP_PHONES = 11;
 	public static final int GROUP_APPLE = 12;
@@ -61,6 +62,12 @@ public final class MarketTestFixtures {
 				LOCATION_ID,
 				"UK",
 				"Test location");
+		jdbc.update(
+				"INSERT INTO locations (location_id, parent_location_id, location_name, description) VALUES (?, ?, ?, ?)",
+				LOCATION_LONDON,
+				LOCATION_ID,
+				"London",
+				"Greater London");
 
 		jdbc.update(
 				"""

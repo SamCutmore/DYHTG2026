@@ -6,6 +6,7 @@ import static xyz.negativeone.app.support.MarketTestFixtures.GROUP_APPLE;
 import static xyz.negativeone.app.support.MarketTestFixtures.GROUP_PHONES;
 import static xyz.negativeone.app.support.MarketTestFixtures.GROUP_ROOT;
 import static xyz.negativeone.app.support.MarketTestFixtures.LOCATION_ID;
+import static xyz.negativeone.app.support.MarketTestFixtures.LOCATION_LONDON;
 import static xyz.negativeone.app.support.MarketTestFixtures.TYPE_ID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -60,6 +61,23 @@ class MarketBrowseSolverTest {
 		assertEquals(GROUP_APPLE, apple.get(0).get("marketGroupId").asInt());
 		assertEquals("Apple", apple.get(0).get("marketGroupName").asString());
 		assertTrue(apple.get(0).get("hasTypes").asBoolean());
+	}
+
+	@Test
+	void listLocationsRootReturnsUk() {
+		JsonNode roots = jsonMapper.readTree(dispatcher.solve("listLocations: root"));
+		assertEquals(1, roots.size());
+		assertEquals(LOCATION_ID, roots.get(0).get("locationId").asInt());
+		assertEquals("UK", roots.get(0).get("locationName").asString());
+	}
+
+	@Test
+	void listLocationsDrillsIntoLondon() {
+		JsonNode children = jsonMapper.readTree(dispatcher.solve("listLocations: " + LOCATION_ID));
+		assertEquals(1, children.size());
+		assertEquals(LOCATION_LONDON, children.get(0).get("locationId").asInt());
+		assertEquals("London", children.get(0).get("locationName").asString());
+		assertEquals(LOCATION_ID, children.get(0).get("parentLocationId").asInt());
 	}
 
 	@Test

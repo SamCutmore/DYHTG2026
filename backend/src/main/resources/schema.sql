@@ -118,6 +118,7 @@ CREATE TABLE IF NOT EXISTS market_prices (
     location_id    INT NOT NULL REFERENCES locations (location_id),
     adjusted_price DECIMAL(20, 2) NULL,
     average_price  DECIMAL(20, 2) NULL,
+    sample_size    INT NOT NULL DEFAULT 0,
     PRIMARY KEY (type_id, location_id)
 );
 
@@ -163,6 +164,10 @@ WHERE NOT EXISTS (SELECT 1 FROM sources WHERE source_id = 6);
 INSERT INTO locations (location_id, parent_location_id, location_name, description)
 SELECT 1, NULL, 'UK', 'United Kingdom (postage / national)'
 WHERE NOT EXISTS (SELECT 1 FROM locations WHERE location_id = 1);
+
+INSERT INTO locations (location_id, parent_location_id, location_name, description)
+SELECT 2, 1, 'London', 'Greater London'
+WHERE NOT EXISTS (SELECT 1 FROM locations WHERE location_id = 2);
 
 INSERT INTO market_groups (market_group_id, parent_group_id, market_group_name, description, has_types)
 SELECT 10, NULL, 'Electronics', 'Consumer electronics', FALSE
