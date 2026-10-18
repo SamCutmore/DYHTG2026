@@ -21,7 +21,7 @@ import xyz.negativeone.app.solver.Query;
  * Ported from SPRE ClientController.handleLogin, plus session token.
  * q=login: username;password → {"token","userId","username"} or Not OK
  */
-public class LoginSolver extends RegexSolver {
+public class LoginSolver extends RegexSolver implements ProtectedSolver {
 	private static final Logger logger = LoggerFactory.getLogger(LoginSolver.class);
 
 	private final UserRepository users;
@@ -46,6 +46,11 @@ public class LoginSolver extends RegexSolver {
 		if (!"login".equalsIgnoreCase(query.token()))
 			return null;
 		return super.match(query);
+	}
+
+	@Override
+	public String sanitizeForLog(Query query) {
+		return ProtectedLog.keepFirstField(query.token(), query.question());
 	}
 
 	@Override

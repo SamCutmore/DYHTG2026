@@ -9,7 +9,7 @@ import xyz.negativeone.app.auth.SessionService;
 import xyz.negativeone.app.solver.Query;
 
 /** q=logout: &lt;token&gt; */
-public class LogoutSolver extends RegexSolver {
+public class LogoutSolver extends RegexSolver implements ProtectedSolver {
 	private static final Logger logger = LoggerFactory.getLogger(LogoutSolver.class);
 
 	private final SessionService sessions;
@@ -24,6 +24,11 @@ public class LogoutSolver extends RegexSolver {
 		if (!"logout".equalsIgnoreCase(query.token()))
 			return null;
 		return super.match(query);
+	}
+
+	@Override
+	public String sanitizeForLog(Query query) {
+		return ProtectedLog.redactAll(query.token());
 	}
 
 	@Override

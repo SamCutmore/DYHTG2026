@@ -15,7 +15,7 @@ import xyz.negativeone.app.persistence.MarketOrderRepository;
 import xyz.negativeone.app.solver.Query;
 
 /** q=listMyOrders: &lt;token&gt; */
-public class ListMyOrdersSolver extends RegexSolver {
+public class ListMyOrdersSolver extends RegexSolver implements ProtectedSolver {
 	private static final Logger logger = LoggerFactory.getLogger(ListMyOrdersSolver.class);
 
 	private final SessionService sessions;
@@ -35,6 +35,11 @@ public class ListMyOrdersSolver extends RegexSolver {
 		if (!"listMyOrders".equalsIgnoreCase(query.token()))
 			return null;
 		return super.match(query);
+	}
+
+	@Override
+	public String sanitizeForLog(Query query) {
+		return ProtectedLog.redactAll(query.token());
 	}
 
 	@Override

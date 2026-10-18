@@ -9,7 +9,7 @@ import xyz.negativeone.app.auth.SessionService;
 import xyz.negativeone.app.persistence.MarketOrderRepository;
 import xyz.negativeone.app.solver.Query;
 
-public class GetMyOrdersSolver extends RegexSolver {
+public class GetMyOrdersSolver extends RegexSolver implements ProtectedSolver {
     private final SessionService sessions;
     private final MarketOrderRepository orders;
     private final JsonMapper jsonMapper;
@@ -30,6 +30,11 @@ public class GetMyOrdersSolver extends RegexSolver {
             return null;
         }
         return super.match(query);
+    }
+
+    @Override
+    public String sanitizeForLog(Query query) {
+        return ProtectedLog.redactAll(query.token());
     }
 
     @Override

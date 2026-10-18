@@ -31,6 +31,7 @@ prompt() {
   prompt SPRING_DATASOURCE_URL "jdbc:postgresql://postgres:5432/dyhtg"
   prompt SPRING_DATASOURCE_USERNAME "app"
   prompt SPRING_DATASOURCE_PASSWORD "" 1
+  prompt NEGATIVEONE_INGEST_TOKEN "" 1
 } >"$ENV_FILE"
 
 chmod 600 "$ENV_FILE"

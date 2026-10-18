@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import org.springframework.stereotype.Component;
 
 import tools.jackson.databind.json.JsonMapper;
+import xyz.negativeone.app.auth.IngestTokenService;
 import xyz.negativeone.app.auth.SessionService;
 import xyz.negativeone.app.market.MarketMaker;
 import xyz.negativeone.app.password.PasswordCredentialService;
@@ -40,6 +41,7 @@ import xyz.negativeone.app.solver.solvers.LoginSolver;
 import xyz.negativeone.app.solver.solvers.LogoutSolver;
 import xyz.negativeone.app.solver.solvers.PlaceBuyOrderSolver;
 import xyz.negativeone.app.solver.solvers.PlaceSellOrderSolver;
+import xyz.negativeone.app.solver.solvers.ProtectedSolver;
 import xyz.negativeone.app.solver.solvers.ReadMessagesSolver;
 import xyz.negativeone.app.solver.solvers.RefreshMarketPriceSolver;
 import xyz.negativeone.app.solver.solvers.RegisterSolver;
@@ -63,6 +65,7 @@ public class SolverDispatcher extends QueryParser {
 			MarketFillRepository marketFills,
 			MarketPriceRepository marketPrices,
 			MarketMaker marketMaker,
+			IngestTokenService ingestTokens,
 			JsonMapper jsonMapper) {
 
 		solvers.add(new SendMessageSolver(messages));
@@ -81,10 +84,10 @@ public class SolverDispatcher extends QueryParser {
 		solvers.add(new PlaceBuyOrderSolver(sessions, invTypes, marketOrders, marketMaker, jsonMapper));
 		solvers.add(new CancelOrderSolver(sessions, marketOrders, jsonMapper));
 		solvers.add(new EditOrderSolver(sessions, marketOrders, marketMaker, jsonMapper));
-		solvers.add(new PlaceSellOrderSolver(invTypes, marketOrders, marketMaker, jsonMapper));
-		solvers.add(new EditSellOrderSolver(marketOrders, marketMaker, jsonMapper));
-		solvers.add(new CancelSellOrderSolver(marketOrders, jsonMapper));
-		solvers.add(new CancelStaleSellOrdersSolver(marketOrders, jsonMapper));
+		solvers.add(new PlaceSellOrderSolver(ingestTokens, invTypes, marketOrders, marketMaker, jsonMapper));
+		solvers.add(new EditSellOrderSolver(ingestTokens, marketOrders, marketMaker, jsonMapper));
+		solvers.add(new CancelSellOrderSolver(ingestTokens, marketOrders, jsonMapper));
+		solvers.add(new CancelStaleSellOrdersSolver(ingestTokens, marketOrders, jsonMapper));
 		solvers.add(new ListMyOrdersSolver(sessions, marketOrders, jsonMapper));
 		solvers.add(new ListMyTransactionsSolver(sessions, marketOrders, marketFills, jsonMapper));
 		solvers.add(new GetMyOrdersSolver(sessions, marketOrders, jsonMapper));
@@ -101,5 +104,30 @@ public class SolverDispatcher extends QueryParser {
 			return solver.solve(m);
 		}
 		return null;
+	}
+
+	/**
+	 * Protect secrets for logging.
+	 */
+	public String describeForLog(String question) {
+		if (question == null || question.isBlank()) {
+			return "";
+		}
+		try {
+			Query q = super.parse(question);
+			for (ISolver solver : solvers) {
+				if (solver.match(q) == null) {
+					continue;
+				}
+				if (solver instanceof ProtectedSolver protectedSolver) {
+					return protectedSolver.sanitizeForLog(q);
+				}
+				return question;
+			}
+		}
+		catch (IllegalArgumentException ignored) {
+			return "(unparsed)";
+		}
+		return question;
 	}
 }

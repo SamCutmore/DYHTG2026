@@ -45,7 +45,7 @@ public class ClientController {
 		}
 
 		String question = allParams.get("q");
-		logger.info("{} q={}", method.name(), question);
+		logger.info("{} q={}", method.name(), dispatcher.describeForLog(question));
 
 		try {
 			String result = dispatcher.solve(question);

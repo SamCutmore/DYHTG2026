@@ -29,6 +29,8 @@ import xyz.negativeone.app.support.MarketTestFixtures;
 @Transactional
 class SellOrderIngestSolverTest {
 
+	private static final String INGEST = "dev-ingest-token";
+
 	@Autowired
 	private SolverDispatcher dispatcher;
 
@@ -48,7 +50,7 @@ class SellOrderIngestSolverTest {
 		String listing = "vinted-" + UUID.randomUUID();
 		JsonNode body = jsonMapper.readTree(dispatcher.solve(
 				"placeSellOrder: " + TYPE_ID + ";" + LOCATION_ID + ";" + SOURCE_VINTED
-						+ ";195.50;2;" + listing));
+						+ ";195.50;2;" + listing + ";" + INGEST));
 
 		assertTrue(body.get("orderId").asLong() > 0);
 		assertEquals(SOURCE_VINTED, body.get("sourceId").asInt());
@@ -72,7 +74,7 @@ class SellOrderIngestSolverTest {
 		String listing = "vinted-upsert";
 		JsonNode first = jsonMapper.readTree(dispatcher.solve(
 				"placeSellOrder: " + TYPE_ID + ";" + LOCATION_ID + ";" + SOURCE_VINTED
-						+ ";200;1;" + listing));
+						+ ";200;1;" + listing + ";" + INGEST));
 		long orderId = first.get("orderId").asLong();
 		Instant firstUpdated = Instant.parse(first.get("lastUpdated").asString());
 
@@ -80,7 +82,7 @@ class SellOrderIngestSolverTest {
 
 		JsonNode second = jsonMapper.readTree(dispatcher.solve(
 				"placeSellOrder: " + TYPE_ID + ";" + LOCATION_ID + ";" + SOURCE_VINTED
-						+ ";180;3;" + listing));
+						+ ";180;3;" + listing + ";" + INGEST));
 
 		assertEquals(orderId, second.get("orderId").asLong());
 		assertEquals(180.0, second.get("price").asDouble());
@@ -107,19 +109,29 @@ class SellOrderIngestSolverTest {
 
 		JsonNode body = jsonMapper.readTree(dispatcher.solve(
 				"placeSellOrder: " + TYPE_ID + ";" + LOCATION_ID + ";" + SOURCE_VINTED
-						+ ";195;1;ask-match"));
+						+ ";195;1;ask-match;" + INGEST));
 
 		assertEquals(1, body.get("fills").asInt());
+	}
+
+	@Test
+	void placeSellOrderRejectsBadIngestionToken() {
+		IllegalArgumentException ex = assertThrows(
+				IllegalArgumentException.class,
+				() -> dispatcher.solve(
+						"placeSellOrder: " + TYPE_ID + ";" + LOCATION_ID + ";" + SOURCE_VINTED
+								+ ";100;1;listing;wrong-token"));
+		assertEquals("Unauthorized", ex.getMessage());
 	}
 
 	@Test
 	void editSellOrderUpdatesPriceAndLastUpdated() {
 		dispatcher.solve(
 				"placeSellOrder: " + TYPE_ID + ";" + LOCATION_ID + ";" + SOURCE_VINTED
-						+ ";200;2;edit-me");
+						+ ";200;2;edit-me;" + INGEST);
 
 		JsonNode body = jsonMapper.readTree(
-				dispatcher.solve("editSellOrder: " + SOURCE_VINTED + ";edit-me;175.25;1"));
+				dispatcher.solve("editSellOrder: " + SOURCE_VINTED + ";edit-me;175.25;1;" + INGEST));
 
 		assertEquals(175.25, body.get("price").asDouble());
 		assertEquals(1, body.get("quantity").asInt());
@@ -131,10 +143,10 @@ class SellOrderIngestSolverTest {
 	void cancelSellOrderMarksCancelledAndReturnsLastUpdated() {
 		dispatcher.solve(
 				"placeSellOrder: " + TYPE_ID + ";" + LOCATION_ID + ";" + SOURCE_VINTED
-						+ ";200;1;cancel-me");
+						+ ";200;1;cancel-me;" + INGEST);
 
 		JsonNode body = jsonMapper.readTree(
-				dispatcher.solve("cancelSellOrder: " + SOURCE_VINTED + ";cancel-me"));
+				dispatcher.solve("cancelSellOrder: " + SOURCE_VINTED + ";cancel-me;" + INGEST));
 
 		assertEquals("cancelled", body.get("status").asString());
 		assertEquals("cancel-me", body.get("externalListingId").asString());
@@ -142,14 +154,14 @@ class SellOrderIngestSolverTest {
 
 		assertThrows(
 				IllegalArgumentException.class,
-				() -> dispatcher.solve("cancelSellOrder: " + SOURCE_VINTED + ";cancel-me"));
+				() -> dispatcher.solve("cancelSellOrder: " + SOURCE_VINTED + ";cancel-me;" + INGEST));
 	}
 
 	@Test
 	void cancelStaleSellOrdersRemovesListingsNotTouchedInLatestIngest() {
 		dispatcher.solve(
 				"placeSellOrder: " + TYPE_ID + ";" + LOCATION_ID + ";" + SOURCE_VINTED
-						+ ";210;1;stale-gone");
+						+ ";210;1;stale-gone;" + INGEST);
 		jdbc.update(
 				"""
 				UPDATE market_orders
@@ -160,14 +172,14 @@ class SellOrderIngestSolverTest {
 				"stale-gone");
 
 		Instant syncStart = Instant.now();
-		// Ingest pass: only listings still live are upserted after syncStart.
 		JsonNode kept = jsonMapper.readTree(dispatcher.solve(
 				"placeSellOrder: " + TYPE_ID + ";" + LOCATION_ID + ";" + SOURCE_VINTED
-						+ ";200;1;kept-live"));
+						+ ";200;1;kept-live;" + INGEST));
 		assertTrue(Instant.parse(kept.get("lastUpdated").asString()).compareTo(syncStart) >= 0);
 
 		JsonNode body = jsonMapper.readTree(dispatcher.solve(
-				"cancelStaleSellOrders: " + SOURCE_VINTED + ";" + syncStart.toEpochMilli()));
+				"cancelStaleSellOrders: " + SOURCE_VINTED + ";" + syncStart.toEpochMilli()
+						+ ";" + INGEST));
 
 		assertEquals(1, body.get("cancelled").asInt());
 
@@ -189,18 +201,19 @@ class SellOrderIngestSolverTest {
 		assertThrows(
 				IllegalArgumentException.class,
 				() -> dispatcher.solve(
-						"placeSellOrder: 99999;" + LOCATION_ID + ";" + SOURCE_VINTED + ";100;1;x"));
+						"placeSellOrder: 99999;" + LOCATION_ID + ";" + SOURCE_VINTED
+								+ ";100;1;x;" + INGEST));
 		assertThrows(
 				IllegalArgumentException.class,
 				() -> dispatcher.solve(
-						"placeSellOrder: " + TYPE_ID + ";" + LOCATION_ID + ";99999;100;1;x"));
+						"placeSellOrder: " + TYPE_ID + ";" + LOCATION_ID + ";99999;100;1;x;" + INGEST));
 	}
 
 	@Test
 	void getOrderBookExposesUpdatedAtForSells() {
 		dispatcher.solve(
 				"placeSellOrder: " + TYPE_ID + ";" + LOCATION_ID + ";" + SOURCE_VINTED
-						+ ";199;1;book-sell");
+						+ ";199;1;book-sell;" + INGEST);
 
 		JsonNode book = jsonMapper.readTree(
 				dispatcher.solve("getOrderBook: " + TYPE_ID + ";" + LOCATION_ID));

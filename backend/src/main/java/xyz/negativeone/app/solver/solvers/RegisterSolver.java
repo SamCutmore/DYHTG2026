@@ -15,7 +15,7 @@ import xyz.negativeone.app.solver.Query;
  * Ported from SPRE ClientController.handleRegistration, as a solver.
  * q=register: username;password;password_again
  */
-public class RegisterSolver extends RegexSolver {
+public class RegisterSolver extends RegexSolver implements ProtectedSolver {
 	private static final Logger logger = LoggerFactory.getLogger(RegisterSolver.class);
 
 	private final UserRepository users;
@@ -32,6 +32,16 @@ public class RegisterSolver extends RegexSolver {
 		if (!"register".equalsIgnoreCase(query.token()))
 			return null;
 		return super.match(query);
+	}
+
+	@Override
+	public String sanitizeForLog(Query query) {
+		String rest = query.question() == null ? "" : query.question().trim();
+		int semi = rest.indexOf(';');
+		if (semi < 0) {
+			return ProtectedLog.redactAll(query.token());
+		}
+		return query.token() + ": " + rest.substring(0, semi) + ";***;***";
 	}
 
 	@Override

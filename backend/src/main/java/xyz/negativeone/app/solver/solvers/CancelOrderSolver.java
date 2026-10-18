@@ -17,7 +17,7 @@ import xyz.negativeone.app.solver.Query;
 /**
  * q=cancelOrder: orderId;token
  */
-public class CancelOrderSolver extends RegexSolver {
+public class CancelOrderSolver extends RegexSolver implements ProtectedSolver {
 	private static final Logger logger = LoggerFactory.getLogger(CancelOrderSolver.class);
 
 	private final SessionService sessions;
@@ -40,6 +40,11 @@ public class CancelOrderSolver extends RegexSolver {
 			return null;
 		}
 		return super.match(query);
+	}
+
+	@Override
+	public String sanitizeForLog(Query query) {
+		return ProtectedLog.redactLastField(query.token(), query.question());
 	}
 
 	@Override

@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
+import xyz.negativeone.app.auth.IngestTokenService;
 import xyz.negativeone.app.market.MarketMaker;
 import xyz.negativeone.app.persistence.MarketOrderRecord;
 import xyz.negativeone.app.persistence.MarketOrderRepository;
@@ -18,20 +19,23 @@ import xyz.negativeone.app.solver.Query;
 
 /**
  * Update price/qty on an ingested external sell.
- * q=editSellOrder: sourceId;externalListingId;price;qty
+ * q=editSellOrder: sourceId;externalListingId;price;qty;ingestionToken
  */
-public class EditSellOrderSolver extends RegexSolver {
+public class EditSellOrderSolver extends RegexSolver implements ProtectedSolver {
 	private static final Logger logger = LoggerFactory.getLogger(EditSellOrderSolver.class);
 
+	private final IngestTokenService ingestTokens;
 	private final MarketOrderRepository orders;
 	private final MarketMaker marketMaker;
 	private final JsonMapper jsonMapper;
 
 	public EditSellOrderSolver(
+			IngestTokenService ingestTokens,
 			MarketOrderRepository orders,
 			MarketMaker marketMaker,
 			JsonMapper jsonMapper) {
-		super("^(\\d+);([^;]+);([0-9]+(?:\\.[0-9]+)?);(\\d+)$");
+		super("^(\\d+);([^;]+);([0-9]+(?:\\.[0-9]+)?);(\\d+);([^;]+)$");
+		this.ingestTokens = ingestTokens;
 		this.orders = orders;
 		this.marketMaker = marketMaker;
 		this.jsonMapper = jsonMapper;
@@ -46,11 +50,17 @@ public class EditSellOrderSolver extends RegexSolver {
 	}
 
 	@Override
+	public String sanitizeForLog(Query query) {
+		return ProtectedLog.redactLastField(query.token(), query.question());
+	}
+
+	@Override
 	public String solve(Matcher m) {
 		int sourceId = Integer.parseInt(m.group(1));
 		String listingId = m.group(2).trim();
 		BigDecimal price = new BigDecimal(m.group(3));
 		int quantity = Integer.parseInt(m.group(4));
+		ingestTokens.requireValid(m.group(5));
 
 		if (price.signum() <= 0 || quantity <= 0) {
 			throw new IllegalArgumentException("price and quantity must be positive");

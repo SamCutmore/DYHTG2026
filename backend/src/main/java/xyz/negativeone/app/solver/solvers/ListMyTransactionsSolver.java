@@ -25,7 +25,7 @@ import xyz.negativeone.app.solver.Query;
  * q=listMyTransactions: &lt;token&gt;
  * Returns order history
  */
-public class ListMyTransactionsSolver extends RegexSolver {
+public class ListMyTransactionsSolver extends RegexSolver implements ProtectedSolver {
 	private static final Logger logger = LoggerFactory.getLogger(ListMyTransactionsSolver.class);
 
 	private final SessionService sessions;
@@ -50,6 +50,11 @@ public class ListMyTransactionsSolver extends RegexSolver {
 		if (!"listMyTransactions".equalsIgnoreCase(query.token()))
 			return null;
 		return super.match(query);
+	}
+
+	@Override
+	public String sanitizeForLog(Query query) {
+		return ProtectedLog.redactAll(query.token());
 	}
 
 	@Override

@@ -10,22 +10,28 @@ import org.slf4j.LoggerFactory;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
+import xyz.negativeone.app.auth.IngestTokenService;
 import xyz.negativeone.app.persistence.MarketOrderRecord;
 import xyz.negativeone.app.persistence.MarketOrderRepository;
 import xyz.negativeone.app.solver.Query;
 
 /**
  * Cancel an ingested external sell by marketplace listing id.
- * q=cancelSellOrder: sourceId;externalListingId
+ * q=cancelSellOrder: sourceId;externalListingId;ingestionToken
  */
-public class CancelSellOrderSolver extends RegexSolver {
+public class CancelSellOrderSolver extends RegexSolver implements ProtectedSolver {
 	private static final Logger logger = LoggerFactory.getLogger(CancelSellOrderSolver.class);
 
+	private final IngestTokenService ingestTokens;
 	private final MarketOrderRepository orders;
 	private final JsonMapper jsonMapper;
 
-	public CancelSellOrderSolver(MarketOrderRepository orders, JsonMapper jsonMapper) {
-		super("^(\\d+);([^;]+)$");
+	public CancelSellOrderSolver(
+			IngestTokenService ingestTokens,
+			MarketOrderRepository orders,
+			JsonMapper jsonMapper) {
+		super("^(\\d+);([^;]+);([^;]+)$");
+		this.ingestTokens = ingestTokens;
 		this.orders = orders;
 		this.jsonMapper = jsonMapper;
 	}
@@ -39,9 +45,15 @@ public class CancelSellOrderSolver extends RegexSolver {
 	}
 
 	@Override
+	public String sanitizeForLog(Query query) {
+		return ProtectedLog.redactLastField(query.token(), query.question());
+	}
+
+	@Override
 	public String solve(Matcher m) {
 		int sourceId = Integer.parseInt(m.group(1));
 		String listingId = m.group(2).trim();
+		ingestTokens.requireValid(m.group(3));
 		if (listingId.isEmpty()) {
 			throw new IllegalArgumentException("externalListingId is required");
 		}

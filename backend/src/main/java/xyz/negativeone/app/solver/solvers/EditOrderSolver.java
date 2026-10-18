@@ -21,7 +21,7 @@ import xyz.negativeone.app.solver.Query;
  * q=editOrder: orderId;price;quantity;token
  * quantity is the new remaining size (filled amount is preserved).
  */
-public class EditOrderSolver extends RegexSolver {
+public class EditOrderSolver extends RegexSolver implements ProtectedSolver {
 	private static final Logger logger = LoggerFactory.getLogger(EditOrderSolver.class);
 
 	private final SessionService sessions;
@@ -47,6 +47,11 @@ public class EditOrderSolver extends RegexSolver {
 			return null;
 		}
 		return super.match(query);
+	}
+
+	@Override
+	public String sanitizeForLog(Query query) {
+		return ProtectedLog.redactLastField(query.token(), query.question());
 	}
 
 	@Override

@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
+import xyz.negativeone.app.auth.IngestTokenService;
 import xyz.negativeone.app.market.MarketMaker;
 import xyz.negativeone.app.persistence.InvTypeRepository;
 import xyz.negativeone.app.persistence.MarketOrderRecord;
@@ -19,22 +20,25 @@ import xyz.negativeone.app.solver.Query;
 
 /**
  * Ingest / upsert an external sell listing.
- * q=placeSellOrder: typeId;locationId;sourceId;price;qty;externalListingId
+ * q=placeSellOrder: typeId;locationId;sourceId;price;qty;externalListingId;ingestionToken
  */
-public class PlaceSellOrderSolver extends RegexSolver {
+public class PlaceSellOrderSolver extends RegexSolver implements ProtectedSolver {
 	private static final Logger logger = LoggerFactory.getLogger(PlaceSellOrderSolver.class);
 
+	private final IngestTokenService ingestTokens;
 	private final InvTypeRepository types;
 	private final MarketOrderRepository orders;
 	private final MarketMaker marketMaker;
 	private final JsonMapper jsonMapper;
 
 	public PlaceSellOrderSolver(
+			IngestTokenService ingestTokens,
 			InvTypeRepository types,
 			MarketOrderRepository orders,
 			MarketMaker marketMaker,
 			JsonMapper jsonMapper) {
-		super("^(\\d+);(\\d+);(\\d+);([0-9]+(?:\\.[0-9]+)?);(\\d+);([^;]+)$");
+		super("^(\\d+);(\\d+);(\\d+);([0-9]+(?:\\.[0-9]+)?);(\\d+);([^;]+);([^;]+)$");
+		this.ingestTokens = ingestTokens;
 		this.types = types;
 		this.orders = orders;
 		this.marketMaker = marketMaker;
@@ -50,6 +54,11 @@ public class PlaceSellOrderSolver extends RegexSolver {
 	}
 
 	@Override
+	public String sanitizeForLog(Query query) {
+		return ProtectedLog.redactLastField(query.token(), query.question());
+	}
+
+	@Override
 	public String solve(Matcher m) {
 		int typeId = Integer.parseInt(m.group(1));
 		int locationId = Integer.parseInt(m.group(2));
@@ -57,6 +66,7 @@ public class PlaceSellOrderSolver extends RegexSolver {
 		BigDecimal price = new BigDecimal(m.group(4));
 		int quantity = Integer.parseInt(m.group(5));
 		String listingId = m.group(6).trim();
+		ingestTokens.requireValid(m.group(7));
 
 		if (price.signum() <= 0 || quantity <= 0) {
 			throw new IllegalArgumentException("price and quantity must be positive");

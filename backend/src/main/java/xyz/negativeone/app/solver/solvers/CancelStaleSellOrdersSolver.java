@@ -11,22 +11,28 @@ import org.slf4j.LoggerFactory;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
+import xyz.negativeone.app.auth.IngestTokenService;
 import xyz.negativeone.app.persistence.MarketOrderRepository;
 import xyz.negativeone.app.solver.Query;
 
 /**
  * After an ingest pass, cancel external sells for a source not touched since
  * {@code updatedBeforeEpochMs}.
- * q=cancelStaleSellOrders: sourceId;updatedBeforeEpochMs
+ * q=cancelStaleSellOrders: sourceId;updatedBeforeEpochMs;ingestionToken
  */
-public class CancelStaleSellOrdersSolver extends RegexSolver {
+public class CancelStaleSellOrdersSolver extends RegexSolver implements ProtectedSolver {
 	private static final Logger logger = LoggerFactory.getLogger(CancelStaleSellOrdersSolver.class);
 
+	private final IngestTokenService ingestTokens;
 	private final MarketOrderRepository orders;
 	private final JsonMapper jsonMapper;
 
-	public CancelStaleSellOrdersSolver(MarketOrderRepository orders, JsonMapper jsonMapper) {
-		super("^(\\d+);(\\d+)$");
+	public CancelStaleSellOrdersSolver(
+			IngestTokenService ingestTokens,
+			MarketOrderRepository orders,
+			JsonMapper jsonMapper) {
+		super("^(\\d+);(\\d+);([^;]+)$");
+		this.ingestTokens = ingestTokens;
 		this.orders = orders;
 		this.jsonMapper = jsonMapper;
 	}
@@ -40,9 +46,15 @@ public class CancelStaleSellOrdersSolver extends RegexSolver {
 	}
 
 	@Override
+	public String sanitizeForLog(Query query) {
+		return ProtectedLog.redactLastField(query.token(), query.question());
+	}
+
+	@Override
 	public String solve(Matcher m) {
 		int sourceId = Integer.parseInt(m.group(1));
 		long epochMs = Long.parseLong(m.group(2));
+		ingestTokens.requireValid(m.group(3));
 		if (!orders.sourceExists(sourceId)) {
 			throw new IllegalArgumentException("Unknown sourceId");
 		}

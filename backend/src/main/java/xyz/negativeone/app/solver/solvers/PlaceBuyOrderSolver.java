@@ -22,7 +22,7 @@ import xyz.negativeone.app.solver.Query;
 /**
  * q=placeBuyOrder: typeId;locationId;price;qty;token
  */
-public class PlaceBuyOrderSolver extends RegexSolver {
+public class PlaceBuyOrderSolver extends RegexSolver implements ProtectedSolver {
 	private static final Logger logger = LoggerFactory.getLogger(PlaceBuyOrderSolver.class);
 	private static final Duration ORDER_TTL = Duration.ofDays(7);
 
@@ -51,6 +51,11 @@ public class PlaceBuyOrderSolver extends RegexSolver {
 		if (!"placeBuyOrder".equalsIgnoreCase(query.token()))
 			return null;
 		return super.match(query);
+	}
+
+	@Override
+	public String sanitizeForLog(Query query) {
+		return ProtectedLog.redactLastField(query.token(), query.question());
 	}
 
 	@Override
