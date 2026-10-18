@@ -1,0 +1,776 @@
+openapi: 3.0.3
+info:
+  title: Negativeone API
+  version: 0.0.1
+  description: |
+    All market/auth calls go through a single endpoint:
+
+    ```
+    GET|POST /api?q={token}: {field1};{field2};...
+    ```
+
+    - Field separator is `;`.
+    - Session tokens are hex strings from `login`.
+    - JSON responses are returned as objects/arrays; plain `OK` is a string body.
+    - Errors are `400` with a plain-text message.
+
+    ### Authentication
+    | Surface | Auth |
+    |---------|------|
+    | Browse / history / prices / locations | None |
+    | User buys (`placeBuyOrder`, `cancelOrder`, `editOrder`, my orders) | Session token in `q` |
+    | External sell ingest (`placeSellOrder`, …) | Trailing `ingestionToken` in `q` |
+
+    ### Ingest token
+    Sell ingest solvers require a shared secret as the **last** `;`-field:
+
+    - Config: `negativeone.ingest.token`
+    - Env (prod): `NEGATIVEONE_INGEST_TOKEN`
+    - Dev default: `dev-ingest-token`
+
+    Wrong/missing token → `400 Unauthorized`.
+
+    Stale sync: capture `syncStart`, upsert live listings, then
+    `cancelStaleSellOrders: sourceId;syncStartEpochMs;ingestionToken`.
+
+servers:
+  - url: http://localhost:8080
+    description: Local Spring Boot `dev` profile
+  - url: https://negativeone.xyz
+    description: Production
+
+tags:
+  - name: Transport
+  - name: Health
+  - name: Auth
+  - name: Catalogue
+  - name: Market
+  - name: UserOrders
+  - name: SellIngest
+  - name: Deprecated
+
+paths:
+  /api/health:
+    get:
+      tags: [Health]
+      operationId: health
+      summary: Liveness probe
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /api:
+    get:
+      tags: [Transport]
+      operationId: apiGet
+      summary: Query API (GET)
+      description: |
+        GET for read-only solvers. Mutating solvers currently also work on GET but
+        should be called with POST.
+      parameters:
+        - $ref: "#/components/parameters/q"
+      responses:
+        "200":
+          $ref: "#/components/responses/SolverSuccess"
+        "400":
+          $ref: "#/components/responses/SolverError"
+    post:
+      tags: [Transport]
+      operationId: apiPost
+      summary: Query API (POST)
+      description: POST for register/login/logout and order mutations.
+      parameters:
+        - $ref: "#/components/parameters/q"
+      responses:
+        "200":
+          $ref: "#/components/responses/SolverSuccess"
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/register:
+    post:
+      tags: [Auth]
+      operationId: register
+      summary: "q=register: username;password;passwordAgain"
+      description: |
+        **Call:** `POST /api?q=register:{username};{password};{passwordAgain}`
+      responses:
+        "200":
+          description: Registered
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: OK
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      summary: "q=login: username;password"
+      description: |
+        **Call:** `POST /api?q=login:{username};{password}`
+      responses:
+        "200":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/logout:
+    post:
+      tags: [Auth]
+      operationId: logout
+      summary: "q=logout: token"
+      description: |
+        **Call:** `POST /api?q=logout:{token}`
+      responses:
+        "200":
+          description: Session destroyed
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: OK
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/listMarketGroups:
+    get:
+      tags: [Catalogue]
+      operationId: listMarketGroups
+      summary: "q=listMarketGroups: root | parentId"
+      description: |
+        **Call:** `GET /api?q=listMarketGroups:root` or `...:listMarketGroups:{parentId}`
+      responses:
+        "200":
+          description: Child market groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MarketGroup"
+
+  /_q/listTypes:
+    get:
+      tags: [Catalogue]
+      operationId: listTypes
+      summary: "q=listTypes: groupId"
+      description: |
+        **Call:** `GET /api?q=listTypes:{groupId}`
+      responses:
+        "200":
+          description: Types in group
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InvType"
+
+  /_q/listLocations:
+    get:
+      tags: [Catalogue]
+      operationId: listLocations
+      summary: "q=listLocations: root | parentId"
+      description: |
+        **Call:** `GET /api?q=listLocations:root` or `...:listLocations:{parentId}`
+      responses:
+        "200":
+          description: Locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Location"
+
+  /_q/getOrderBook:
+    get:
+      tags: [Market]
+      operationId: getOrderBook
+      summary: "q=getOrderBook: typeId;locationId"
+      description: |
+        **Call:** `GET /api?q=getOrderBook:{typeId};{locationId}`
+
+        Open/partial buys (price desc) and sells (price asc). Includes `updatedAt`
+        and `externalListingId` on orders.
+      responses:
+        "200":
+          description: Order book
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderBook"
+
+  /_q/getHistory:
+    get:
+      tags: [Market]
+      operationId: getHistory
+      summary: "q=getHistory: typeId;locationId"
+      description: |
+        **Call:** `GET /api?q=getHistory:{typeId};{locationId}`
+      responses:
+        "200":
+          description: Daily OHLCV-style bars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MarketHistoryBar"
+
+  /_q/getMarketPrice:
+    get:
+      tags: [Market]
+      operationId: getMarketPrice
+      summary: "q=getMarketPrice: typeId;locationId"
+      description: |
+        **Call:** `GET /api?q=getMarketPrice:{typeId};{locationId}`
+
+        Cached snapshot. `medianPrice` is stored in DB column `average_price`;
+        `lowestPrice` in `adjusted_price`. Empty if never refreshed.
+      responses:
+        "200":
+          description: Cached reference prices
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketPrice"
+
+  /_q/refreshMarketPrice:
+    post:
+      tags: [Market]
+      operationId: refreshMarketPrice
+      summary: "q=refreshMarketPrice: typeId;locationId"
+      description: |
+        **Call:** `POST /api?q=refreshMarketPrice:{typeId};{locationId}`
+
+        Recomputes median + lowest from current open sells and upserts `market_prices`.
+      responses:
+        "200":
+          description: Refreshed prices
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketPrice"
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/placeBuyOrder:
+    post:
+      tags: [UserOrders]
+      operationId: placeBuyOrder
+      summary: "q=placeBuyOrder: typeId;locationId;price;qty;token"
+      description: |
+        **Call:** `POST /api?q=placeBuyOrder:{typeId};{locationId};{price};{qty};{token}`
+
+        Creates a user buy (`owner_kind=user`, 7-day TTL) and runs the market maker.
+      responses:
+        "200":
+          description: Order placed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaceBuyOrderResponse"
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/cancelOrder:
+    post:
+      tags: [UserOrders]
+      operationId: cancelOrder
+      summary: "q=cancelOrder: orderId;token"
+      description: |
+        **Call:** `POST /api?q=cancelOrder:{orderId};{token}`
+
+        Cancels an owned open/partial order.
+      responses:
+        "200":
+          description: Cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CancelOrderResponse"
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/editOrder:
+    post:
+      tags: [UserOrders]
+      operationId: editOrder
+      summary: "q=editOrder: orderId;price;quantity;token"
+      description: |
+        **Call:** `POST /api?q=editOrder:{orderId};{price};{quantity};{token}`
+
+        `quantity` is the new **remaining** size; filled amount is preserved.
+        Calls market maker.
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EditOrderResponse"
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/listMyOrders:
+    get:
+      tags: [UserOrders]
+      operationId: listMyOrders
+      summary: "q=listMyOrders: token"
+      description: |
+        **Call:** `GET /api?q=listMyOrders:{token}`
+
+        Open/partial orders for the session user.
+      responses:
+        "200":
+          description: Open orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MarketOrder"
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/listMyTransactions:
+    get:
+      tags: [UserOrders]
+      operationId: listMyTransactions
+      summary: "q=listMyTransactions: token"
+      description: |
+        **Call:** `GET /api?q=listMyTransactions:{token}`
+
+        Filled/cancelled/expired order history with nested fills.
+      responses:
+        "200":
+          description: Transaction history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MyTransaction"
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/getMyOrders:
+    get:
+      tags: [UserOrders]
+      operationId: getMyOrders
+      summary: "q=getMyOrders: token"
+      description: |
+        **Call:** `GET /api?q=getMyOrders:{token}`
+
+        All of the user's **buy** orders with `typeName`.
+      responses:
+        "200":
+          description: Buy orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MyOrder"
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/placeSellOrder:
+    post:
+      tags: [SellIngest]
+      operationId: placeSellOrder
+      summary: "q=placeSellOrder: typeId;locationId;sourceId;price;qty;externalListingId;ingestionToken"
+      description: |
+        **Call:** `POST /api?q=placeSellOrder:{typeId};{locationId};{sourceId};{price};{qty};{listingId};{ingestionToken}`
+
+        Upserts an **external** sell by `(sourceId, externalListingId)`, touches
+        `updated_at`, then calls market maker.
+
+        **Auth:** shared ingest secret (`NEGATIVEONE_INGEST_TOKEN` / `negativeone.ingest.token`).
+      responses:
+        "200":
+          description: Upserted sell
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaceSellOrderResponse"
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/editSellOrder:
+    post:
+      tags: [SellIngest]
+      operationId: editSellOrder
+      summary: "q=editSellOrder: sourceId;externalListingId;price;qty;ingestionToken"
+      description: |
+        **Call:** `POST /api?q=editSellOrder:{sourceId};{listingId};{price};{qty};{ingestionToken}`
+      responses:
+        "200":
+          description: Updated sell
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EditSellOrderResponse"
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/cancelSellOrder:
+    post:
+      tags: [SellIngest]
+      operationId: cancelSellOrder
+      summary: "q=cancelSellOrder: sourceId;externalListingId;ingestionToken"
+      description: |
+        **Call:** `POST /api?q=cancelSellOrder:{sourceId};{listingId};{ingestionToken}`
+      responses:
+        "200":
+          description: Cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CancelSellOrderResponse"
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/cancelStaleSellOrders:
+    post:
+      tags: [SellIngest]
+      operationId: cancelStaleSellOrders
+      summary: "q=cancelStaleSellOrders: sourceId;updatedBeforeEpochMs;ingestionToken"
+      description: |
+        **Call:** `POST /api?q=cancelStaleSellOrders:{sourceId};{epochMs};{ingestionToken}`
+
+        After an ingest pass: cancel open external sells for that source whose
+        `updated_at` is older than `epochMs`.
+      responses:
+        "200":
+          description: Stale sells cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CancelStaleSellOrdersResponse"
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/sendMessage:
+    post:
+      tags: [Deprecated]
+      deprecated: true
+      operationId: sendMessage
+      summary: "q=sendMessage: body (deprecated)"
+      responses:
+        "200":
+          description: OK
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/readMessages:
+    get:
+      tags: [Deprecated]
+      deprecated: true
+      operationId: readMessages
+      summary: "q=readMessages: from;to (deprecated)"
+      responses:
+        "200":
+          description: Messages
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+  /_q/price:
+    get:
+      tags: [Deprecated]
+      deprecated: true
+      operationId: comparePrice
+      summary: "q=price: … (deprecated compare-price)"
+      responses:
+        "200":
+          description: Legacy price compare
+        "400":
+          $ref: "#/components/responses/SolverError"
+
+components:
+  parameters:
+    q:
+      name: q
+      in: query
+      required: true
+      description: |
+        Solver invocation: `{token}: {fields...}` with `;` between fields.
+        Example: `getOrderBook: 1001;1`
+      schema:
+        type: string
+      examples:
+        getOrderBook:
+          value: "getOrderBook: 1001;1"
+        placeBuyOrder:
+          value: "placeBuyOrder: 1001;1;195.00;1;0123...abcd"
+        placeSellOrder:
+          value: "placeSellOrder: 1001;1;2;199.99;1;vinted-123;dev-ingest-token"
+
+  responses:
+    SolverSuccess:
+      description: |
+        Solver result. JSON object/array when the body starts with `{` or `[`;
+        otherwise a plain string.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - type: object
+                additionalProperties: true
+              - type: array
+                items: {}
+              - type: string
+        text/plain:
+          schema:
+            type: string
+    SolverError:
+      description: Solver or validation error
+      content:
+        text/plain:
+          schema:
+            type: string
+            examples:
+              - Unauthorized
+              - No solver matched
+              - Order not found or not cancellable
+
+  schemas:
+    LoginResponse:
+      type: object
+      required: [token, userId, username]
+      properties:
+        token:
+          type: string
+          description: 64-char hex session token
+        userId:
+          type: integer
+        username:
+          type: string
+
+    MarketGroup:
+      type: object
+      properties:
+        marketGroupId: { type: integer }
+        parentGroupId: { type: integer, nullable: true }
+        marketGroupName: { type: string }
+        description: { type: string, nullable: true }
+        hasTypes: { type: boolean }
+
+    InvType:
+      type: object
+      properties:
+        typeId: { type: integer }
+        typeName: { type: string }
+        description: { type: string, nullable: true }
+        basePrice: { type: number, nullable: true }
+        published: { type: boolean }
+        marketGroupId: { type: integer, nullable: true }
+
+    Location:
+      type: object
+      properties:
+        locationId: { type: integer }
+        parentLocationId: { type: integer, nullable: true }
+        locationName: { type: string }
+        description: { type: string, nullable: true }
+
+    MarketOrder:
+      type: object
+      properties:
+        orderId: { type: integer, format: int64 }
+        typeId: { type: integer }
+        locationId: { type: integer }
+        sourceId: { type: integer }
+        side:
+          type: string
+          enum: [buy, sell]
+        price: { type: number }
+        quantity: { type: integer }
+        quantityInitial: { type: integer }
+        status:
+          type: string
+          enum: [open, partial, filled, cancelled]
+        externalUrl: { type: string, nullable: true }
+        externalListingId: { type: string, nullable: true }
+        ownerKind:
+          type: string
+          enum: [user, market_maker, external]
+        ownerRef: { type: string, nullable: true }
+        userId: { type: integer, nullable: true }
+        expiresAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt:
+          type: string
+          format: date-time
+          description: lastUpdated
+
+    OrderBook:
+      type: object
+      properties:
+        typeId: { type: integer }
+        locationId: { type: integer }
+        buys:
+          type: array
+          items:
+            $ref: "#/components/schemas/MarketOrder"
+        sells:
+          type: array
+          items:
+            $ref: "#/components/schemas/MarketOrder"
+
+    MarketHistoryBar:
+      type: object
+      properties:
+        locationId: { type: integer }
+        typeId: { type: integer }
+        date: { type: string, format: date }
+        lowPrice: { type: number }
+        highPrice: { type: number }
+        avgPrice: { type: number }
+        volume: { type: integer, format: int64 }
+        orders: { type: integer, format: int64 }
+
+    MarketPrice:
+      type: object
+      properties:
+        typeId: { type: integer }
+        locationId: { type: integer }
+        medianPrice:
+          type: number
+          nullable: true
+          description: Median open-sell ask
+        lowestPrice:
+          type: number
+          nullable: true
+          description: Best / lowest open-sell ask
+        sampleSize: { type: integer }
+
+    PlaceBuyOrderResponse:
+      type: object
+      properties:
+        orderId: { type: integer, format: int64 }
+        userId: { type: integer }
+        expiresAt: { type: string, format: date-time }
+        fills: { type: integer }
+
+    CancelOrderResponse:
+      type: object
+      properties:
+        orderId: { type: integer, format: int64 }
+        status:
+          type: string
+          enum: [cancelled]
+
+    EditOrderResponse:
+      type: object
+      properties:
+        orderId: { type: integer, format: int64 }
+        price: { type: number }
+        quantity: { type: integer }
+        quantityInitial: { type: integer }
+        status: { type: string }
+        fills: { type: integer }
+
+    MyOrder:
+      type: object
+      properties:
+        orderId: { type: integer, format: int64 }
+        typeId: { type: integer }
+        typeName: { type: string }
+        price: { type: number }
+        quantity: { type: integer }
+        quantityInitial: { type: integer }
+        status:
+          type: string
+          enum: [open, partial, filled, cancelled]
+        createdAt: { type: string, format: date-time }
+
+    MarketFill:
+      type: object
+      properties:
+        fillId: { type: integer, format: int64 }
+        typeId: { type: integer }
+        locationId: { type: integer }
+        buyOrderId: { type: integer, format: int64 }
+        sellOrderId: { type: integer, format: int64 }
+        price: { type: number }
+        quantity: { type: integer }
+        filledAt: { type: string, format: date-time }
+
+    MyTransaction:
+      type: object
+      properties:
+        order:
+          $ref: "#/components/schemas/MarketOrder"
+        fills:
+          type: array
+          items:
+            $ref: "#/components/schemas/MarketFill"
+
+    PlaceSellOrderResponse:
+      type: object
+      properties:
+        orderId: { type: integer, format: int64 }
+        typeId: { type: integer }
+        locationId: { type: integer }
+        sourceId: { type: integer }
+        externalListingId: { type: string }
+        price: { type: number }
+        quantity: { type: integer }
+        quantityInitial: { type: integer }
+        status: { type: string }
+        fills: { type: integer }
+        lastUpdated:
+          type: string
+          format: date-time
+          description: market_orders.updated_at
+        createdAt: { type: string, format: date-time }
+
+    EditSellOrderResponse:
+      type: object
+      properties:
+        orderId: { type: integer, format: int64 }
+        sourceId: { type: integer }
+        externalListingId: { type: string }
+        price: { type: number }
+        quantity: { type: integer }
+        quantityInitial: { type: integer }
+        status: { type: string }
+        fills: { type: integer }
+        lastUpdated: { type: string, format: date-time }
+
+    CancelSellOrderResponse:
+      type: object
+      properties:
+        orderId: { type: integer, format: int64 }
+        sourceId: { type: integer }
+        externalListingId: { type: string }
+        status:
+          type: string
+          enum: [cancelled]
+        lastUpdated: { type: string, format: date-time }
+
+    CancelStaleSellOrdersResponse:
+      type: object
+      properties:
+        sourceId: { type: integer }
+        updatedBefore: { type: string, format: date-time }
+        cancelled: { type: integer }
