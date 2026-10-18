@@ -3,6 +3,7 @@ import type {
   InvType,
   LoginResponse,
   MarketGroup,
+  MarketHistory,
   MarketOrder,
   Message,
   MyOrder,
@@ -104,6 +105,13 @@ export async function placeBuyOrder(
 export async function getOrderBook( typeId: number, locationId = 1): Promise<OrderBook> { // chose location 1 here is because it is the UK in the seed data, we have getOrderSolver handling this already
   const { data } = await api.get<OrderBook>('/api', {
     params: { q: `getOrderBook: ${typeId};${locationId}` },
+  })
+  return data
+}
+
+export async function getHistory(typeId: number, locationId = 1): Promise<MarketHistory[]> {
+  const { data } = await api.get<MarketHistory[]>('/api', {
+    params: { q: `getHistory: ${typeId};${locationId}` },
   })
   return data
 }

@@ -28,6 +28,14 @@
   @media (max-width: 1024px) {
     font-size: 16px;
   }
+
+  @media (min-width: 1500px) {
+    font-size: 22px;
+  }
+
+  @media (min-width: 2200px) {
+    font-size: 28px;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -51,10 +59,10 @@
 }
 
 #root {
-  width: min(1440px, 100%);
+  width: 100%;
   max-width: 100%;
   margin: 0 auto;
-  border-inline: 1px solid var(--border);
+  border-inline: 0;
   min-height: 100svh;
   display: flex;
   flex-direction: column;

@@ -3,6 +3,7 @@ import type { InvType, LoginResponse } from './api/types'
 import { logout } from './api/clients'
 import Sidebar from './Sidebar'
 import ProductComparison from './ProductComparison'
+import PriceHistoryChart from './PriceHistoryChart'
 import { AccountForm, BuyOrderForm, MyOrders } from './Orders'
 import './App.css'
 
@@ -110,6 +111,11 @@ function App() {
           <>
             <ProductComparison
               key={`${selectedType.typeId}-${marketVersion}`}
+              typeId={selectedType.typeId}
+            />
+
+            <PriceHistoryChart
+              key={selectedType.typeId}
               typeId={selectedType.typeId}
             />
 
