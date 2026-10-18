@@ -4,7 +4,6 @@ React frontend + Spring Boot backend. Market API, Docker images published to Nex
 
 Pipeline on `main`: **test → build → publish**. 
 
-
 ## Requirements
 
 | Tool | Notes |
@@ -14,10 +13,6 @@ Pipeline on `main`: **test → build → publish**.
 | **Docker** + Compose | Run/pull images |
 | **Java 21** | Backend Temurin|
 | **Node 22** | Frontend |
-| **Git** | Clone repo |
-| **SSH** | Access to the VPS |
-
-Local backend uses in-memory **H2**.
 
 
 ## First-time production setup
@@ -57,7 +52,7 @@ cd /opt/negativeone
 ./opstools/setup.sh
 ```
 
-Prompts (values written to `.env`, chmod `600`):
+Prompt values written to `.env`, chmod `600`:
 
 | Variable | Example value |
 |----------|----------------|
@@ -68,8 +63,6 @@ Prompts (values written to `.env`, chmod `600`):
 | `SPRING_DATASOURCE_USERNAME` / `PASSWORD` | Postgres app user |
 | `NEGATIVEONE_INGEST_TOKEN` | Shared secret for sell-order ingest |
 
-`.env` is gitignored and survives Actions deployment.
-
 
 ## Database and deploy
 
@@ -79,7 +72,7 @@ Schema/init is handled by Spring.
 
 Actions → **deploy** → Run workflow. SSHes to the VPS, syncs `/opt/negativeone` to `main`, then `fetch.sh` + `up.sh`.
 
-Requires first-time `setup.sh` already done so `.env` exists to protect secrets
+Requires first-time `setup.sh` already done so `.env` exists.
 
 ### Option B Manual on the VPS
 
@@ -91,7 +84,6 @@ cd /opt/negativeone
 ```
 
 Useful companions: `./opstools/logs.sh`, `./opstools/down.sh`.
-
 
 ## Local development
 
@@ -139,7 +131,7 @@ Compose (`docker-compose.yml`) runs:
 | Workflow | Trigger | What it does |
 |----------|---------|----------------|
 | **pipeline** | Push to `main` | `test` → `build` → `publish` |
-| **test** | Called by pipeline | `./mvnw verify` JaCoCo artifact |
+| **test** | First pipeline stage | `./mvnw verify` JaCoCo artifact |
 | **build** | After test | Package backend; `npm ci` + `npm run build` |
 | **publish** | After build | push Docker images to Nexus (`latest` + commit SHA) |
 | **deploy** | Manual | SSH → sync repo → `fetch.sh` → `up.sh` |
@@ -147,5 +139,6 @@ Compose (`docker-compose.yml`) runs:
 
 ## Further reading
 
+- Stack / architecture: `docs/ARCHITECTURE.md`
 - Profiles and local vs prod DB: `docs/PROCEDURES.md`
 - HTTP API: `docs/openapi.yaml`
