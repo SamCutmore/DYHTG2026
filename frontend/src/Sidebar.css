@@ -313,3 +313,49 @@
     min-height: 44px;
   }
 }
+
+/* Desktop: toggle hidden, body is transparent to layout. */
+.sidebar-mobile-toggle {
+  display: none;
+}
+
+.sidebar-body {
+  display: contents;
+}
+
+/* Phones: Browse becomes a dropdown that opens to over half the screen. */
+@media (max-width: 680px) {
+  .sidebar-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 44px;
+    margin: 0;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text-h);
+    font: inherit;
+    font-weight: 650;
+    cursor: pointer;
+  }
+
+  .sidebar-body {
+    display: none;
+  }
+
+  .sidebar-body.is-open {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    height: 60svh;
+    min-height: 0;
+  }
+
+  .app-shell > aside.sidebar {
+    max-height: none;
+    overflow: visible;
+  }
+}

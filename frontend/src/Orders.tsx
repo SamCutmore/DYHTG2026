@@ -165,8 +165,8 @@ export function MyOrders({
                   }
                   onContextMenu={(event) => openMenu(event, order)}
                 >
-                  <td>#{order.orderId}</td>
-                  <td>
+                  <td data-label="Order">#{order.orderId}</td>
+                  <td data-label="Product">
                     <span className="order-product">
                       <TypeIcon
                         typeId={order.typeId}
@@ -176,12 +176,12 @@ export function MyOrders({
                       <span>{order.typeName}</span>
                     </span>
                   </td>
-                  <td>{currency.format(order.price)}</td>
-                  <td>{order.quantityInitial}</td>
-                  <td>{order.quantityInitial - order.quantity}</td>
-                  <td>{order.quantity}</td>
-                  <td>{statusLabels[order.status]}</td>
-                  <td>{new Date(order.createdAt).toLocaleString('en-GB')}</td>
+                  <td data-label="Limit price">{currency.format(order.price)}</td>
+                  <td data-label="Ordered">{order.quantityInitial}</td>
+                  <td data-label="Filled">{order.quantityInitial - order.quantity}</td>
+                  <td data-label="Remaining">{order.quantity}</td>
+                  <td data-label="Status">{statusLabels[order.status]}</td>
+                  <td data-label="Created">{new Date(order.createdAt).toLocaleString('en-GB')}</td>
                 </tr>
               ))}
             </tbody>

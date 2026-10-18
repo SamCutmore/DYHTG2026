@@ -100,25 +100,25 @@ export default function MyTransactions({
                 )
                 return (
                   <tr key={order.orderId}>
-                    <td>#{order.orderId}</td>
-                    <td>
+                    <td data-label="Order">#{order.orderId}</td>
+                    <td data-label="Product">
                       <span className="order-product">
                         <TypeIcon typeId={order.typeId} size={28} />
                         <span>Type {order.typeId}</span>
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Location">
                       {locationNames[order.locationId] ??
                         `Location ${order.locationId}`}
                     </td>
-                    <td>{currency.format(order.price)}</td>
-                    <td>{filledQty}</td>
-                    <td>
+                    <td data-label="Limit price">{currency.format(order.price)}</td>
+                    <td data-label="Filled qty">{filledQty}</td>
+                    <td data-label="Fill total">
                       {filledQty > 0 ? currency.format(fillTotal) : '—'}
                     </td>
-                    <td>{fills.length}</td>
-                    <td>{statusLabels[order.status]}</td>
-                    <td>
+                    <td data-label="Fills">{fills.length}</td>
+                    <td data-label="Status">{statusLabels[order.status]}</td>
+                    <td data-label="Updated">
                       {new Date(order.updatedAt).toLocaleString('en-GB')}
                     </td>
                   </tr>

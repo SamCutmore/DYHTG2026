@@ -36,7 +36,7 @@ function Sidebar({
   quickbar,
   onNavTabChange,
   onSearchChange,
-  onSelectType,
+  onSelectType: onSelectTypeProp,
   onRemoveQuickbar,
 }: SidebarProps) {
   const [roots, setRoots] = useState<GroupNode[]>([])
@@ -45,6 +45,12 @@ function Sidebar({
   const [searchResults, setSearchResults] = useState<InvType[]>([])
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  function onSelectType(type: InvType) {
+    onSelectTypeProp(type)
+    setMobileOpen(false)
+  }
 
   const q = search.trim()
   const searching = q.length >= 2
@@ -174,6 +180,21 @@ function Sidebar({
 
   return (
     <aside className="sidebar">
+      <button
+        type="button"
+        className="sidebar-mobile-toggle"
+        aria-expanded={mobileOpen}
+        onClick={() => setMobileOpen((current) => !current)}
+      >
+        <span>Browse items</span>
+        <span aria-hidden="true">{mobileOpen ? '▴' : '▾'}</span>
+      </button>
+
+      <div
+        className={
+          mobileOpen ? 'sidebar-body is-open' : 'sidebar-body'
+        }
+      >
       <nav className="sidebar-tabs" role="tablist" aria-label="Navigation">
         <button
           type="button"
@@ -304,6 +325,7 @@ function Sidebar({
           )}
         </section>
       )}
+      </div>
     </aside>
   )
 }

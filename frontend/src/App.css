@@ -1481,3 +1481,237 @@
   opacity: 0.6;
   cursor: wait;
 }
+@media (max-width: 680px) {
+  #center {
+    padding: 20px 16px;
+    gap: 20px;
+
+    h1 {
+      font-size: 1.6rem;
+    }
+  }
+
+  .message-form label {
+    flex-basis: 100%;
+  }
+
+  .message-form,
+  .orders-panel .message-form {
+    max-width: none;
+  }
+}
+
+/* Phones: tables become stacked cards so nothing scrolls sideways. */
+@media (max-width: 680px) {
+  .market-table-scroll,
+  .orders-table-scroll {
+    max-height: none;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  #center .market-table,
+  #center .orders-table {
+    display: block;
+    min-width: 0;
+    overflow: visible;
+  }
+
+  #center .orders-table caption {
+    display: block;
+  }
+
+  #center .orders-table thead {
+    display: none;
+  }
+
+  /* Market headers stay as a wrapped row of sort buttons. */
+  #center .market-table thead {
+    display: block;
+  }
+
+  #center .market-table thead tr {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  #center .market-table thead th {
+    position: static;
+    display: block;
+    flex: 1 1 auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0;
+  }
+
+  #center .market-sort-btn {
+    min-height: 36px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+  }
+
+  #center .market-table tbody,
+  #center .orders-table tbody {
+    display: block;
+  }
+
+  #center .market-table tbody tr,
+  #center .orders-table tbody tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+  }
+
+  #center .market-table tbody tr td,
+  #center .orders-table tbody tr td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-size: 0.9rem;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  #center .market-table tbody tr td::before,
+  #center .orders-table tbody tr td::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  #center .orders-table tbody tr td[data-label='Product'] {
+    grid-column: 1 / -1;
+  }
+
+  /* Account panel becomes a viewport-fitted sheet so login/sign-up never need page scroll. */
+  .account-menu-panel {
+    position: fixed;
+    top: 56px;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    max-height: calc(100svh - 64px);
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .account-menu-panel .message-form {
+    gap: 8px;
+  }
+
+  .account-menu-panel .message-form input {
+    font-size: 16px;
+    padding: 8px 10px;
+  }
+}
+
+/* Phones: Market / Dashboard tabs move to a fixed bottom bar. */
+@media (max-width: 680px) {
+  .app-shell {
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom));
+  }
+
+  .app-header-dashboards.orders-toolbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    order: 0;
+    flex: none;
+    width: 100%;
+    box-sizing: border-box;
+    height: calc(3.5rem + env(safe-area-inset-bottom));
+    padding: 0 0 env(safe-area-inset-bottom);
+    border-top: 1px solid var(--border);
+    background: var(--code-bg);
+  }
+
+  .app-header-dashboards.orders-toolbar button {
+    flex: 1 1 0;
+    min-height: 3.5rem;
+    padding: 0 12px;
+    border-bottom: 0;
+    border-top: 3px solid transparent;
+    text-align: center;
+  }
+
+  .app-header-dashboards.orders-toolbar button[aria-current='page'] {
+    border-bottom: 0;
+    border-top: 3px solid var(--accent);
+  }
+
+  .account-menu-panel {
+    max-height: calc(100svh - 64px - 3.5rem - env(safe-area-inset-bottom));
+  }
+}
+
+/* Phones: dialogs are compact so the buy form fits without scrolling. */
+@media (max-width: 680px) {
+  .modal-backdrop {
+    place-items: start center;
+    padding: 8px;
+  }
+
+  .modal-dialog {
+    width: 100%;
+    max-height: calc(100dvh - 16px);
+    gap: 8px;
+    padding: 12px;
+    box-sizing: border-box;
+  }
+
+  .modal-dialog-header h2 {
+    font-size: 1.05rem;
+  }
+
+  .message-form.buy-order-form {
+    gap: 8px;
+  }
+
+  .message-form.buy-order-form label {
+    gap: 2px;
+    font-size: 0.85rem;
+  }
+
+  .message-form.buy-order-form input {
+    padding: 6px 8px;
+    font-size: 16px;
+  }
+
+  .buy-order-meta {
+    gap: 2px;
+  }
+
+  .buy-order-meta-row {
+    grid-template-columns: 4.5rem 1fr;
+    gap: 8px;
+  }
+
+  .buy-order-fields {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .modal-dialog-actions button {
+    min-height: 40px;
+    padding: 6px 10px;
+  }
+}

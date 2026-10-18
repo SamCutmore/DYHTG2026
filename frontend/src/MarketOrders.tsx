@@ -610,7 +610,7 @@ function OrderTable({
                         : undefined
                     }
                   >
-                    <td className="market-cell-num">
+                    <td className="market-cell-num" data-label="Price">
                       <span className="market-price-cell">
                         {owned ? (
                           <span
@@ -622,15 +622,21 @@ function OrderTable({
                         {currency.format(offer.price)}
                       </span>
                     </td>
-                    <td className="market-cell-num">{offer.quantity}</td>
-                    {side === 'buy' ? <td>{buyerName ?? '—'}</td> : null}
-                    <td>
+                    <td className="market-cell-num" data-label="Qty">
+                      {offer.quantity}
+                    </td>
+                    {side === 'buy' ? (
+                      <td data-label="Buyer">{buyerName ?? '—'}</td>
+                    ) : null}
+                    <td data-label="Location">
                       {locationNames[offer.locationId] ??
                         `Location ${offer.locationId}`}
                     </td>
-                    <td>{sources[offer.sourceId] ?? 'Other'}</td>
-                    <td>{statusLabels[offer.status]}</td>
-                    <td className="market-cell-num">
+                    <td data-label="Source">
+                      {sources[offer.sourceId] ?? 'Other'}
+                    </td>
+                    <td data-label="Status">{statusLabels[offer.status]}</td>
+                    <td className="market-cell-num" data-label="Updated">
                       {new Date(offer.updatedAt).toLocaleString('en-GB', {
                         dateStyle: 'short',
                         timeStyle: 'short',
