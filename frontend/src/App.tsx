@@ -1,142 +1,184 @@
-import { useCallback, useState } from 'react'
-import type { InvType, LoginResponse } from './api/types'
-import { logout } from './api/clients'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { InvType, Location, LoginResponse } from './api/types'
+import { listLocations } from './api/clients'
+import AppHeader from './AppHeader'
 import Sidebar from './Sidebar'
-import ProductComparison from './ProductComparison'
-import PriceHistoryChart from './PriceHistoryChart'
-import { AccountForm, BuyOrderForm, MyOrders } from './Orders'
+import ItemWorkspace from './ItemWorkspace'
+import NoticePopup from './NoticePopup'
+import { MyOrders } from './Orders'
+import { useQuickbar } from './useQuickbar'
 import './App.css'
+
+type Page = 'market' | 'orders'
+type ItemTab = 'data' | 'history'
+type NavTab = 'browse' | 'quickbar'
 
 function App() {
   const [search, setSearch] = useState('')
   const [selectedType, setSelectedType] = useState<InvType | null>(null)
   const [session, setSession] = useState<LoginResponse | null>(null)
-  const [page, setPage] = useState<'market' | 'orders'>('market')
+  const [page, setPage] = useState<Page>('market')
+  const [itemTab, setItemTab] = useState<ItemTab>('data')
+  const [navTab, setNavTab] = useState<NavTab>('browse')
   const [notice, setNotice] = useState('')
-  const [loggingOut, setLoggingOut] = useState(false)
   const [marketVersion, setMarketVersion] = useState(0)
+  const [ordersFlashKey, setOrdersFlashKey] = useState(0)
+  const [highlightBuyOrderId, setHighlightBuyOrderId] = useState<number | null>(
+    null,
+  )
+  const [locations, setLocations] = useState<Location[]>([])
+  const [locationId, setLocationId] = useState(1)
+  const quickbar = useQuickbar()
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const roots = await listLocations('root')
+        const nested = await Promise.all(
+          roots.map(async (root) => {
+            const children = await listLocations(root.locationId)
+            return [root, ...children]
+          }),
+        )
+        if (!cancelled) {
+          const flat = nested.flat()
+          setLocations(flat)
+          setLocationId((current) =>
+            flat.some((l) => l.locationId === current)
+              ? current
+              : (flat[0]?.locationId ?? 1),
+          )
+        }
+      } catch {
+        if (!cancelled) {
+          setLocations([
+            {
+              locationId: 1,
+              parentLocationId: null,
+              locationName: 'UK',
+              description: null,
+            },
+          ])
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const locationName = useMemo(
+    () =>
+      locations.find((l) => l.locationId === locationId)?.locationName ??
+      `Location ${locationId}`,
+    [locations, locationId],
+  )
 
   const handleExpired = useCallback(() => {
     setSession(null)
     setNotice('Your session expired. Please log in again.')
   }, [])
 
-  async function handleLogout() {
-    if (!session || loggingOut) return
-
-    setLoggingOut(true)
-    try {
-      await logout(session.token)
-      setNotice('Logged out.')
-    } catch {
-      setNotice(
-        'Logged out on this device. The server could not confirm logout.',
-      )
-    } finally {
-      setSession(null)
-      setLoggingOut(false)
-    }
+  function selectType(type: InvType) {
+    setSelectedType(type)
+    setPage('market')
+    setItemTab('data')
   }
+
+  const clearNotice = useCallback(() => setNotice(''), [])
+  const clearHighlightBuy = useCallback(
+    () => setHighlightBuyOrderId(null),
+    [],
+  )
 
   return (
     <div className="app-shell">
+      <AppHeader
+        page={page}
+        session={session}
+        ordersFlashKey={ordersFlashKey}
+        onPageChange={setPage}
+        onLogin={(result) => {
+          setSession(result)
+          setNotice('')
+        }}
+        onLogout={() => setSession(null)}
+        onNotice={setNotice}
+      />
+
       <Sidebar
         search={search}
         selectedTypeId={selectedType?.typeId ?? null}
+        navTab={navTab}
+        quickbar={quickbar.items}
+        onNavTabChange={setNavTab}
         onSearchChange={setSearch}
-        onSelectType={(type) => {
-          setSelectedType(type)
-          setPage('market')
-          setNotice('')
-        }}
+        onSelectType={selectType}
+        onRemoveQuickbar={quickbar.remove}
       />
 
+      <NoticePopup message={notice} onClose={clearNotice} />
+
       <main id="center">
-        <nav className="orders-toolbar" aria-label="Main navigation">
-          <button
-            type="button"
-            aria-current={page === 'market' ? 'page' : undefined}
-            onClick={() => setPage('market')}
-          >
-            Market
-          </button>
-          <button
-            type="button"
-            aria-current={page === 'orders' ? 'page' : undefined}
-            onClick={() => setPage('orders')}
-          >
-            My Orders
-          </button>
-        </nav>
-
-        {notice && <p role="status">{notice}</p>}
-
-        {session ? (
-          <div className="orders-toolbar">
-            <span>Logged in as {session.username}</span>
-            <button
-              type="button"
-              disabled={loggingOut}
-              onClick={handleLogout}
-            >
-              {loggingOut ? 'Logging out…' : 'Log out'}
-            </button>
-          </div>
-        ) : (
-          <AccountForm
-            onLogin={(result) => {
-              setSession(result)
-              setNotice('')
-            }}
-          />
-        )}
-
-        <h1>
-          {page === 'orders'
-            ? 'My Orders'
-            : selectedType?.typeName ?? 'Market'}
-        </h1>
-
         {page === 'orders' ? (
-          session ? (
-            <MyOrders
-              key={session.userId}
-              token={session.token}
-              onExpired={handleExpired}
-            />
-          ) : (
-            <p>Log in to view your orders.</p>
-          )
-        ) : selectedType ? (
           <>
-            <ProductComparison
-              key={`${selectedType.typeId}-${marketVersion}`}
-              typeId={selectedType.typeId}
-            />
-
-            <PriceHistoryChart
-              key={selectedType.typeId}
-              typeId={selectedType.typeId}
-            />
-
+            <h1>My Orders</h1>
             {session ? (
-              <BuyOrderForm
-                key={`${selectedType.typeId}-${session.userId}`}
-                typeId={selectedType.typeId}
+              <MyOrders
+                key={session.userId}
                 token={session.token}
                 onExpired={handleExpired}
-                onPlaced={(orderId) => {
-                  setMarketVersion((current) => current + 1)
-                  setNotice(`Order #${orderId} placed.`)
-                  setPage('orders')
-                }}
               />
             ) : (
-              <p>Log in to place a buy order.</p>
+              <p>Use the account menu (top right) to log in and view orders.</p>
             )}
           </>
+        ) : selectedType ? (
+          <ItemWorkspace
+            key={selectedType.typeId}
+            type={selectedType}
+            locationId={locationId}
+            locationName={locationName}
+            locations={locations}
+            itemTab={itemTab}
+            session={session}
+            marketVersion={marketVersion}
+            highlightBuyOrderId={highlightBuyOrderId}
+            pinned={quickbar.has(selectedType.typeId)}
+            onItemTabChange={setItemTab}
+            onLocationChange={setLocationId}
+            onTogglePin={() => {
+              if (quickbar.has(selectedType.typeId)) {
+                quickbar.remove(selectedType.typeId)
+              } else {
+                quickbar.add(selectedType)
+                setNavTab('quickbar')
+              }
+            }}
+            onExpired={handleExpired}
+            onNeedLogin={() => setNotice('Log in to place a buy order.')}
+            onHighlightBuyConsumed={clearHighlightBuy}
+            onBuyPlaced={(result) => {
+              setMarketVersion((current) => current + 1)
+              setOrdersFlashKey((current) => current + 1)
+              setHighlightBuyOrderId(result.orderId)
+              setNotice(
+                result.fills > 0
+                  ? `Your buy order #${result.orderId} was filled.`
+                  : `Your buy order #${result.orderId} was placed.`,
+              )
+            }}
+          />
         ) : (
-          <p>Select a product from the sidebar to compare offers.</p>
+          <>
+            <h1>Market</h1>
+            <p>
+              Select a product from Browse or Quickbar, or search for a type.
+              After selecting an item, use Location next to Market Data / Price
+              History to switch regional books (e.g. UK vs Germany).
+            </p>
+          </>
         )}
       </main>
     </div>
