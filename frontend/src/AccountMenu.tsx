@@ -240,11 +240,15 @@ export default function AccountMenu({
                     />
                   </label>
                 ) : null}
-                <button type="submit" disabled={busy}>
+                <button
+                  type="submit"
+                  className="account-menu-submit"
+                  disabled={busy}
+                >
                   {busy
                     ? 'Please wait…'
                     : mode === 'register'
-                      ? 'Create account and log in'
+                      ? 'Create account'
                       : 'Log in'}
                 </button>
               </form>
@@ -264,16 +268,6 @@ export default function AccountMenu({
                 {mode === 'register'
                   ? 'Use existing account'
                   : 'Create an account'}
-              </button>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => {
-                  setMode('menu')
-                  setError('')
-                }}
-              >
-                Back
               </button>
             </>
           ) : null}

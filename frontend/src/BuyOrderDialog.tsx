@@ -131,51 +131,51 @@ export default function BuyOrderDialog({
         </header>
 
         <form className="message-form buy-order-form" onSubmit={submit}>
-          <label>
-            Item
-            <input readOnly value={typeName} />
-          </label>
+          <dl className="buy-order-meta">
+            <div className="buy-order-meta-row">
+              <dt>Item</dt>
+              <dd>{typeName}</dd>
+            </div>
+            <div className="buy-order-meta-row">
+              <dt>Location</dt>
+              <dd>{locationName}</dd>
+            </div>
+          </dl>
 
-          <label>
-            Location
-            <input readOnly value={locationName} />
-          </label>
+          <div className="buy-order-fields">
+            <label>
+              Maximum unit price (£)
+              <input
+                required
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={price}
+                onChange={(event) => setPrice(event.target.value)}
+              />
+            </label>
 
-          <label>
-            Maximum unit price (£)
-            <input
-              required
-              type="number"
-              min="0.01"
-              step="0.01"
-              value={price}
-              onChange={(event) => setPrice(event.target.value)}
-            />
-          </label>
+            <label>
+              Quantity
+              <input
+                required
+                type="number"
+                min="1"
+                max="2147483647"
+                step="1"
+                value={quantity}
+                onChange={(event) => setQuantity(event.target.value)}
+              />
+            </label>
+          </div>
 
-          <label>
-            Quantity
-            <input
-              required
-              type="number"
-              min="1"
-              max="2147483647"
-              step="1"
-              value={quantity}
-              onChange={(event) => setQuantity(event.target.value)}
-            />
-          </label>
-
-          <label>
+          <label className="buy-order-expiry">
             Expiry
             <input
               type="datetime-local"
               value={expiry}
               onChange={(event) => setExpiry(event.target.value)}
             />
-            <span className="field-hint">
-              Optional. The market currently applies a 7-day TTL.
-            </span>
           </label>
 
           <div className="modal-dialog-actions">

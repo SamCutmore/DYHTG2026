@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { PointerEvent as ReactPointerEvent } from 'react'
 import { getHistory } from './api/clients'
 import type { MarketHistory } from './api/types'
 
-const W = 840
-const H = 360
-const PAD = { top: 18, right: 20, bottom: 56, left: 64 }
-const VOL_H = 56
+const W = 880
+const H = 340
+const NAV_H = 84
+const PAD = { top: 16, right: 56, bottom: 36, left: 64 }
 
 const currency = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -13,6 +14,20 @@ const currency = new Intl.NumberFormat('en-GB', {
 })
 
 const volumeFmt = new Intl.NumberFormat('en-GB')
+
+type Range = { start: number; end: number }
+type DragMode = 'move' | 'left' | 'right'
+
+function clamp(n: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, n))
+}
+
+function defaultRange(length: number): Range {
+  if (length <= 0) return { start: 0, end: 0 }
+  const end = length - 1
+  const window = Math.min(30, length)
+  return { start: end - window + 1, end }
+}
 
 function PriceHistory({
   typeId,
@@ -25,7 +40,13 @@ function PriceHistory({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [hover, setHover] = useState<number | null>(null)
-  const [windowDays, setWindowDays] = useState(30)
+  const [range, setRange] = useState<Range>({ start: 0, end: 0 })
+  const dragRef = useRef<{
+    mode: DragMode
+    originX: number
+    origin: Range
+  } | null>(null)
+  const navSvgRef = useRef<SVGSVGElement | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -33,9 +54,10 @@ function PriceHistory({
     setError(null)
     getHistory(typeId, locationId)
       .then((data) => {
-        if (!cancelled) {
-          setRows([...data].sort((a, b) => a.date.localeCompare(b.date)))
-        }
+        if (cancelled) return
+        const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date))
+        setRows(sorted)
+        setRange(defaultRange(sorted.length))
       })
       .catch(() => {
         if (!cancelled) setError('Could not load price history.')
@@ -48,94 +70,212 @@ function PriceHistory({
     }
   }, [typeId, locationId])
 
-  const maxDays = Math.max(rows.length, 1)
-  const clampedWindow = Math.min(windowDays, maxDays)
-
   const visible = useMemo(() => {
     if (!rows.length) return []
-    return rows.slice(-clampedWindow)
-  }, [rows, clampedWindow])
-
-  useEffect(() => {
-    if (rows.length > 0 && windowDays > rows.length) {
-      setWindowDays(rows.length)
-    }
-  }, [rows.length, windowDays])
+    const start = clamp(range.start, 0, rows.length - 1)
+    const end = clamp(range.end, start, rows.length - 1)
+    return rows.slice(start, end + 1)
+  }, [rows, range])
 
   if (loading) return <p>Loading price history…</p>
   if (error) return <p role="alert">{error}</p>
   if (!rows.length) return <p>No price history available.</p>
 
+  const innerW = W - PAD.left - PAD.right
+  const innerH = H - PAD.top - PAD.bottom
+
   const min = Math.min(...visible.map((r) => r.lowPrice))
   const max = Math.max(...visible.map((r) => r.highPrice))
   const span = max - min || 1
-  const yMin = min - span * 0.1
-  const yMax = max + span * 0.1
-  const innerW = W - PAD.left - PAD.right
-  const priceH = H - PAD.top - PAD.bottom - VOL_H - 12
-  const volTop = PAD.top + priceH + 10
+  const yMin = min - span * 0.08
+  const yMax = max + span * 0.08
   const maxVol = Math.max(...visible.map((r) => r.volume), 1)
 
-  const x = (i: number) =>
-    PAD.left +
-    (visible.length === 1 ? innerW / 2 : (i / (visible.length - 1)) * innerW)
-  const y = (v: number) => PAD.top + (1 - (v - yMin) / (yMax - yMin)) * priceH
+  const xAt = (i: number, count: number) =>
+    PAD.left + (count <= 1 ? innerW / 2 : (i / (count - 1)) * innerW)
+  const yPrice = (v: number) =>
+    PAD.top + (1 - (v - yMin) / (yMax - yMin)) * innerH
+  // Bars: max volume reaches 1/4 plot height. Axis keeps that scale to the top
+  // (so if max is 3 at 1/4, labels continue 6, 9, 12 at 1/2, 3/4, full).
+  const volBand = innerH * 0.25
+  const volAxisMax = maxVol * (innerH / volBand)
+  const yVolBar = (v: number) =>
+    PAD.top + innerH - (v / maxVol) * volBand
+  const yVolAxis = (v: number) =>
+    PAD.top + innerH - (v / volAxisMax) * innerH
+  const volTicks = Array.from(
+    { length: 5 },
+    (_, i) => (volAxisMax * i) / 4,
+  )
+
+  const x = (i: number) => xAt(i, visible.length)
   const barW = Math.max(
-    3,
-    Math.min(14, (innerW / Math.max(visible.length, 1)) * 0.55),
+    2,
+    Math.min(12, (innerW / Math.max(visible.length, 1)) * 0.5),
   )
 
   const avgPath = visible
-    .map((r, i) => `${i ? 'L' : 'M'}${x(i)},${y(r.avgPrice)}`)
+    .map((r, i) => `${i ? 'L' : 'M'}${x(i)},${yPrice(r.avgPrice)}`)
     .join(' ')
   const bandPath =
-    visible.map((r, i) => `${i ? 'L' : 'M'}${x(i)},${y(r.highPrice)}`).join(' ') +
+    visible
+      .map((r, i) => `${i ? 'L' : 'M'}${x(i)},${yPrice(r.highPrice)}`)
+      .join(' ') +
     ' ' +
     [...visible]
-      .map((r, i) => `L${x(i)},${y(r.lowPrice)}`)
+      .map((r, i) => `L${x(i)},${yPrice(r.lowPrice)}`)
       .reverse()
       .join(' ') +
     ' Z'
 
-  const ticks = Array.from({ length: 5 }, (_, i) => yMin + ((yMax - yMin) * i) / 4)
+  const priceTicks = Array.from(
+    { length: 5 },
+    (_, i) => yMin + ((yMax - yMin) * i) / 4,
+  )
   const active = hover === null ? null : visible[hover]
   const labelStep = Math.max(1, Math.ceil(visible.length / 7))
+  const daySpan = visible.length
+
+  // Navigator geometry
+  const navPad = { top: 8, right: PAD.right, bottom: 18, left: PAD.left }
+  const navInnerW = W - navPad.left - navPad.right
+  const navInnerH = NAV_H - navPad.top - navPad.bottom
+  const navMin = Math.min(...rows.map((r) => r.lowPrice))
+  const navMax = Math.max(...rows.map((r) => r.highPrice))
+  const navSpan = navMax - navMin || 1
+  const navX = (i: number) =>
+    navPad.left +
+    (rows.length <= 1 ? navInnerW / 2 : (i / (rows.length - 1)) * navInnerW)
+  const navY = (v: number) =>
+    navPad.top + (1 - (v - navMin) / navSpan) * navInnerH
+  const navAvg = rows
+    .map((r, i) => `${i ? 'L' : 'M'}${navX(i)},${navY(r.avgPrice)}`)
+    .join(' ')
+  const selLeft = navX(range.start)
+  const selRight = navX(range.end)
+  const selWidth = Math.max(selRight - selLeft, 4)
+
+  function indexFromClientX(clientX: number): number {
+    const svg = navSvgRef.current
+    if (!svg || rows.length <= 1) return 0
+    const rect = svg.getBoundingClientRect()
+    const scale = W / rect.width
+    const localX = (clientX - rect.left) * scale
+    const t = (localX - navPad.left) / navInnerW
+    return clamp(Math.round(t * (rows.length - 1)), 0, rows.length - 1)
+  }
+
+  function beginDrag(mode: DragMode, clientX: number) {
+    dragRef.current = {
+      mode,
+      originX: clientX,
+      origin: { ...range },
+    }
+  }
+
+  function onNavPointerDown(event: ReactPointerEvent<SVGSVGElement>) {
+    const target = event.target as Element
+    const handle = target.getAttribute('data-handle') as DragMode | null
+    if (handle === 'left' || handle === 'right' || handle === 'move') {
+      event.currentTarget.setPointerCapture(event.pointerId)
+      beginDrag(handle, event.clientX)
+      return
+    }
+
+    // Click on overview: centre window on click, keep width
+    const idx = indexFromClientX(event.clientX)
+    const width = Math.max(1, range.end - range.start + 1)
+    let start = idx - Math.floor(width / 2)
+    let end = start + width - 1
+    if (start < 0) {
+      start = 0
+      end = width - 1
+    }
+    if (end > rows.length - 1) {
+      end = rows.length - 1
+      start = Math.max(0, end - width + 1)
+    }
+    setRange({ start, end })
+    event.currentTarget.setPointerCapture(event.pointerId)
+    beginDrag('move', event.clientX)
+  }
+
+  function onNavPointerMove(event: ReactPointerEvent<SVGSVGElement>) {
+    const drag = dragRef.current
+    if (!drag) return
+
+    const originIdx = indexFromClientX(drag.originX)
+    const nowIdx = indexFromClientX(event.clientX)
+    const delta = nowIdx - originIdx
+    const width = drag.origin.end - drag.origin.start
+
+    if (drag.mode === 'move') {
+      let start = drag.origin.start + delta
+      let end = drag.origin.end + delta
+      if (start < 0) {
+        start = 0
+        end = width
+      }
+      if (end > rows.length - 1) {
+        end = rows.length - 1
+        start = end - width
+      }
+      setRange({ start, end })
+      return
+    }
+
+    if (drag.mode === 'left') {
+      const start = clamp(drag.origin.start + delta, 0, drag.origin.end)
+      setRange({ start, end: drag.origin.end })
+      return
+    }
+
+    const end = clamp(drag.origin.end + delta, drag.origin.start, rows.length - 1)
+    setRange({ start: drag.origin.start, end })
+  }
+
+  function onNavPointerUp(event: ReactPointerEvent<SVGSVGElement>) {
+    dragRef.current = null
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+  }
 
   return (
     <figure className="price-chart">
       <div className="price-chart-toolbar">
-        <figcaption>
-          Price history · average with low–high range and volume
-        </figcaption>
-        <label className="price-window">
-          <span>
-            Last {clampedWindow} day{clampedWindow === 1 ? '' : 's'}
-          </span>
-          <input
-            type="range"
-            min={1}
-            max={maxDays}
-            step={1}
-            value={clampedWindow}
-            onChange={(event) => setWindowDays(Number(event.target.value))}
-            aria-label="History time period in days"
-          />
-        </label>
+        <ul className="chart-legend" aria-label="Chart legend">
+          <li>
+            <span className="chart-legend-swatch chart-legend-donchian" />
+            Donchian channel
+          </li>
+          <li>
+            <span className="chart-legend-swatch chart-legend-avg" />
+            Average
+          </li>
+          <li>
+            <span className="chart-legend-swatch chart-legend-vol" />
+            Volume
+          </li>
+        </ul>
+        <p className="chart-window-label">
+          {daySpan} day{daySpan === 1 ? '' : 's'} shown
+        </p>
       </div>
 
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Price history chart">
-        {ticks.map((t) => (
-          <g key={t}>
+        {priceTicks.map((t) => (
+          <g key={`p-${t}`}>
             <line
               x1={PAD.left}
               x2={W - PAD.right}
-              y1={y(t)}
-              y2={y(t)}
+              y1={yPrice(t)}
+              y2={yPrice(t)}
               className="chart-grid"
             />
             <text
               x={PAD.left - 8}
-              y={y(t) + 4}
+              y={yPrice(t) + 4}
               textAnchor="end"
               className="chart-label"
             >
@@ -144,54 +284,49 @@ function PriceHistory({
           </g>
         ))}
 
-        <path d={bandPath} className="chart-band" />
-        <path d={avgPath} className="chart-line" />
+        {volTicks.map((t) => (
+          <text
+            key={`v-${t}`}
+            x={W - PAD.right + 8}
+            y={yVolAxis(t) + 4}
+            textAnchor="start"
+            className="chart-label chart-label-volume"
+          >
+            {volumeFmt.format(t)}
+          </text>
+        ))}
 
         {visible.map((r, i) => {
-          const bh = (r.volume / maxVol) * VOL_H
+          const top = yVolBar(r.volume)
+          const base = PAD.top + innerH
           return (
-            <g key={`vol-${r.date}`}>
-              <rect
-                x={x(i) - barW / 2}
-                y={volTop + VOL_H - bh}
-                width={barW}
-                height={bh}
-                className={
-                  hover === i ? 'chart-volume is-active' : 'chart-volume'
-                }
-                onMouseEnter={() => setHover(i)}
-                onMouseLeave={() => setHover(null)}
-              >
-                <title>
-                  {r.date}: {volumeFmt.format(r.volume)} sold
-                </title>
-              </rect>
-            </g>
+            <rect
+              key={`vol-${r.date}`}
+              x={x(i) - barW / 2}
+              y={top}
+              width={barW}
+              height={Math.max(0, base - top)}
+              className={
+                hover === i ? 'chart-volume is-active' : 'chart-volume'
+              }
+              onMouseEnter={() => setHover(i)}
+              onMouseLeave={() => setHover(null)}
+            >
+              <title>
+                {r.date}: {volumeFmt.format(r.volume)} sold
+              </title>
+            </rect>
           )
         })}
 
-        {visible.map((r, i) =>
-          i % labelStep === 0 || i === visible.length - 1 ? (
-            <text
-              key={`d-${r.date}`}
-              x={x(i)}
-              y={H - 14}
-              textAnchor="middle"
-              className="chart-label"
-            >
-              {new Date(r.date).toLocaleDateString('en-GB', {
-                day: 'numeric',
-                month: 'short',
-              })}
-            </text>
-          ) : null,
-        )}
+        <path d={bandPath} className="chart-band" />
+        <path d={avgPath} className="chart-line" />
 
         {visible.map((r, i) => (
           <circle
             key={`dot-${r.date}`}
             cx={x(i)}
-            cy={y(r.avgPrice)}
+            cy={yPrice(r.avgPrice)}
             r={hover === i ? 6 : 4}
             className="chart-dot"
             onMouseEnter={() => setHover(i)}
@@ -203,12 +338,128 @@ function PriceHistory({
           </circle>
         ))}
 
+        {visible.map((r, i) =>
+          i % labelStep === 0 || i === visible.length - 1 ? (
+            <text
+              key={`d-${r.date}`}
+              x={x(i)}
+              y={H - 12}
+              textAnchor="middle"
+              className="chart-label"
+            >
+              {new Date(r.date).toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+              })}
+            </text>
+          ) : null,
+        )}
+      </svg>
+
+      <svg
+        ref={navSvgRef}
+        className="chart-navigator"
+        viewBox={`0 0 ${W} ${NAV_H}`}
+        role="slider"
+        aria-label="Select visible history range"
+        aria-valuemin={0}
+        aria-valuemax={rows.length - 1}
+        aria-valuetext={`${rows[range.start]?.date ?? ''} to ${rows[range.end]?.date ?? ''}`}
+        onPointerDown={onNavPointerDown}
+        onPointerMove={onNavPointerMove}
+        onPointerUp={onNavPointerUp}
+        onPointerCancel={onNavPointerUp}
+      >
+        <rect
+          x={navPad.left}
+          y={navPad.top}
+          width={navInnerW}
+          height={navInnerH}
+          className="chart-nav-track"
+        />
+        <path d={navAvg} className="chart-nav-line" />
+
+        {/* Dim outside selection */}
+        <rect
+          x={navPad.left}
+          y={navPad.top}
+          width={Math.max(0, selLeft - navPad.left)}
+          height={navInnerH}
+          className="chart-nav-mask"
+        />
+        <rect
+          x={selRight}
+          y={navPad.top}
+          width={Math.max(0, navPad.left + navInnerW - selRight)}
+          height={navInnerH}
+          className="chart-nav-mask"
+        />
+
+        <rect
+          x={selLeft}
+          y={navPad.top}
+          width={selWidth}
+          height={navInnerH}
+          className="chart-nav-window"
+          data-handle="move"
+        />
+        <rect
+          x={selLeft - 3}
+          y={navPad.top}
+          width={6}
+          height={navInnerH}
+          className="chart-nav-handle"
+          data-handle="left"
+        />
+        <rect
+          x={selRight - 3}
+          y={navPad.top}
+          width={6}
+          height={navInnerH}
+          className="chart-nav-handle"
+          data-handle="right"
+        />
+
         <text
-          x={PAD.left}
-          y={volTop - 2}
-          className="chart-label chart-volume-label"
+          x={navPad.left}
+          y={NAV_H - 2}
+          textAnchor="start"
+          className="chart-label chart-nav-date"
         >
-          Volume
+          {new Date(rows[0].date).toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'short',
+            year: '2-digit',
+          })}
+        </text>
+        <text
+          x={navPad.left + navInnerW}
+          y={NAV_H - 2}
+          textAnchor="end"
+          className="chart-label chart-nav-date"
+        >
+          {new Date(rows[rows.length - 1].date).toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'short',
+            year: '2-digit',
+          })}
+        </text>
+        <text
+          x={(selLeft + selRight) / 2}
+          y={navPad.top + 11}
+          textAnchor="middle"
+          className="chart-label chart-nav-range"
+          style={{ pointerEvents: 'none' }}
+        >
+          {new Date(rows[range.start].date).toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'short',
+          })}
+          {' – '}
+          {new Date(rows[range.end].date).toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'short',
+          })}
         </text>
       </svg>
 
@@ -219,11 +470,7 @@ function PriceHistory({
           {currency.format(active.highPrice)}) ·{' '}
           <strong>{volumeFmt.format(active.volume)} sold</strong>
         </p>
-      ) : (
-        <p className="chart-tooltip chart-tooltip-hint">
-          Hover a pip or volume bar for total volume sold that day.
-        </p>
-      )}
+      ) : null}
     </figure>
   )
 }

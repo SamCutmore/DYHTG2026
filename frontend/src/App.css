@@ -76,8 +76,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
-  gap: 8px 20px;
-  padding: 0 16px 0 12px;
+  gap: 0;
+  padding: 0 16px 0 0;
   min-height: 56px;
   border-bottom: 1px solid var(--border);
   background: var(--code-bg);
@@ -143,22 +143,44 @@
 
 .account-menu-panel .message-form {
   max-width: none;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+
+.account-menu-panel .message-form label {
+  flex: none;
+  width: 100%;
+}
+
+.account-menu-panel .message-form .account-menu-submit {
+  width: 100%;
+  margin-top: 4px;
 }
 
 .account-menu-panel button {
   font: inherit;
   padding: 8px 12px;
   cursor: pointer;
+  transition: box-shadow 0.3s;
+}
+
+.account-menu-panel button:hover:not(:disabled) {
+  box-shadow: var(--shadow);
 }
 
 .app-header-brand {
   display: inline-flex;
   align-items: center;
-  align-self: center;
+  align-self: stretch;
   gap: 12px;
+  box-sizing: border-box;
+  width: 17.5rem;
+  flex: 0 0 17.5rem;
   min-width: 0;
-  padding: 0;
+  padding: 0 12px;
   border: 0;
+  border-right: 1px solid var(--border);
   background: transparent;
   color: inherit;
   cursor: pointer;
@@ -192,7 +214,8 @@
   align-self: stretch;
   gap: 0;
   margin: 0;
-  margin-left: 4px;
+  margin-left: 0;
+  padding-left: 8px;
 }
 
 .app-header-dashboards.orders-toolbar button {
@@ -360,31 +383,20 @@
   border-bottom-color: var(--accent);
 }
 
-.item-tools {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
-  padding: 6px 0;
-}
-
-.item-tools button,
-.item-tools select {
-  font: inherit;
-  padding: 7px 11px;
-}
-
 .item-location {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
+  padding: 6px 0;
   font-size: 0.88rem;
   font-weight: 600;
 }
 
 .item-location select {
+  font: inherit;
   font-weight: 400;
+  padding: 7px 11px;
 }
 
 .item-pane {
@@ -412,43 +424,154 @@
 
 .market-books {
   display: grid;
-  gap: 20px;
+  gap: 22px;
 }
 
-.market-data-section h3 {
-  margin: 0 0 4px;
+.market-section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 6px;
+}
+
+.market-section-heading h3 {
+  margin: 0;
   font-size: 1rem;
   color: var(--text-h);
 }
 
-.market-table-caption {
-  margin: 0 0 4px;
-  font-size: 0.8rem;
-  color: var(--text);
+.market-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.market-heading-actions button {
+  font: inherit;
+  padding: 6px 10px;
+  transition: box-shadow 0.3s;
+}
+
+.market-heading-actions button:hover:not(:disabled) {
+  box-shadow: var(--shadow);
 }
 
 .market-table-scroll {
-  max-height: 14rem;
-  overflow-x: hidden;
+  max-height: 15rem;
+  overflow-x: auto;
   overflow-y: auto;
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  border: 1px solid #9aa39b;
+  background: var(--bg);
 }
 
-.market-table-scroll table {
+.market-table {
+  width: 100%;
   margin: 0;
-  font-size: 0.88rem;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
 }
 
-.market-table-scroll thead th {
+.market-table thead th {
   position: sticky;
   top: 0;
   z-index: 1;
+  padding: 0;
+  border-bottom: 1px solid #7f8a82;
+  background: #e8ebe4;
+  color: var(--text-h);
+  font-weight: 700;
+  text-align: left;
 }
 
-.market-table-scroll th,
-.market-table-scroll td {
+.market-table tbody td {
   padding: 5px 10px;
+  border-bottom: 1px solid #d5d9d2;
+  border-right: 1px solid #e4e7e1;
+  background: var(--bg);
+  color: var(--text-h);
+  white-space: nowrap;
+}
+
+.market-table tbody td:last-child {
+  border-right: 0;
+}
+
+.market-table tbody tr:nth-child(even) td {
+  background: #f7f8f5;
+}
+
+.market-table tbody tr:hover td {
+  background: #eef3ea;
+}
+
+.market-cell-num {
+  text-align: right;
+  font-family: var(--mono);
+}
+
+.market-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.market-sort-btn:hover,
+.market-sort-btn.is-active {
+  background: #dce3d8;
+}
+
+.market-sort-ind {
+  color: #697970;
+  font-size: 0.65rem;
+  line-height: 1;
+}
+
+.market-sort-btn.is-active .market-sort-ind {
+  color: var(--text-h);
+}
+
+@media (prefers-color-scheme: dark) {
+  .market-table-scroll {
+    border-color: #4a4e58;
+  }
+
+  .market-table thead th {
+    border-bottom-color: #5c6170;
+    background: #252730;
+  }
+
+  .market-table tbody td {
+    border-bottom-color: #2e303a;
+    border-right-color: #2a2c36;
+  }
+
+  .market-table tbody tr:nth-child(even) td {
+    background: #1b1c24;
+  }
+
+  .market-table tbody tr:hover td {
+    background: #22242e;
+  }
+
+  .market-sort-btn:hover,
+  .market-sort-btn.is-active {
+    background: #2f3340;
+  }
 }
 
 .market-row-interactive {
@@ -457,6 +580,32 @@
 
 .market-row-interactive:hover {
   background: color-mix(in srgb, var(--code-bg) 70%, transparent);
+}
+
+.market-price-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.market-owned-mark {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0.28rem 0 0.28rem 0.4rem;
+  border-color: transparent transparent transparent var(--accent);
+  flex: 0 0 auto;
+}
+
+.market-table tbody tr.market-row-owned:hover td {
+  background: #eef3ea;
+}
+
+@media (prefers-color-scheme: dark) {
+  .market-table tbody tr.market-row-owned:hover td {
+    background: #22242e;
+  }
 }
 
 .market-table-scroll tr.row-flash {
@@ -504,10 +653,17 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
+  transition:
+    background 0.2s,
+    box-shadow 0.3s;
 }
 
 .context-menu button:hover:not(:disabled) {
   background: var(--code-bg);
+  /* Inset so the glow stays on the row, not the whole menu panel. */
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent),
+    inset 0 0 12px color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 .context-menu button:disabled {
@@ -600,33 +756,110 @@
   cursor: pointer;
 }
 
-.buy-order-form {
+.message-form.buy-order-form {
   max-width: none;
   display: grid;
-  gap: 12px;
+  flex-wrap: nowrap;
+  gap: 14px;
+  align-items: stretch;
+  justify-content: stretch;
 }
 
-.buy-order-form label {
+.message-form.buy-order-form label {
   flex: none;
+  width: 100%;
 }
 
-.field-hint {
-  font-size: 0.8rem;
-  font-weight: 400;
-  color: var(--text);
+.message-form.buy-order-form input {
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.modal-dialog-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+.buy-order-meta {
+  margin: 0;
+  display: grid;
   gap: 8px;
 }
 
+.buy-order-meta-row {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.buy-order-meta-row dt {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.buy-order-meta-row dd {
+  margin: 0;
+  color: var(--text-h);
+  font-weight: 550;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.buy-order-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.buy-order-expiry {
+  width: 100%;
+  min-width: 0;
+}
+
+.buy-order-expiry input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
 .modal-dialog-actions button {
+  width: 100%;
   padding: 8px 14px;
   font: inherit;
   cursor: pointer;
+  transition: box-shadow 0.3s;
+}
+
+.modal-dialog-actions button:hover:not(:disabled) {
+  box-shadow: var(--shadow);
+}
+
+.buy-order-confirm-copy {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 420px) {
+  .buy-order-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .buy-order-meta-row {
+    grid-template-columns: 5.5rem 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .app-header-brand {
+    width: auto;
+    flex: 1 1 auto;
+    border-right: 0;
+  }
 }
 
 
@@ -864,6 +1097,11 @@
     padding: 8px 14px;
     font: inherit;
     cursor: pointer;
+    transition: box-shadow 0.3s;
+  }
+
+  button:hover:not(:disabled) {
+    box-shadow: var(--shadow);
   }
 }
 
@@ -903,29 +1141,67 @@
     margin-bottom: 8px;
   }
 
-  figcaption {
+  .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 18px;
     margin: 0;
-    font-size: 0.9rem;
+    padding: 0;
+    list-style: none;
+    font-size: 0.86rem;
+    color: var(--text-h);
   }
 
-  .price-window {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 12rem;
+  .chart-legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .chart-legend-swatch {
+    display: inline-block;
+    width: 18px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  .chart-legend-donchian {
+    background: var(--accent-bg);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+
+  .chart-legend-avg {
+    height: 3px;
+    background: var(--accent);
+  }
+
+  .chart-legend-vol {
+    background: color-mix(in srgb, var(--text) 35%, transparent);
+  }
+
+  .chart-window-label {
+    margin: 0;
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-h);
   }
 
-  .price-window input[type='range'] {
-    width: 100%;
-    accent-color: var(--accent);
-  }
-
   svg {
     width: 100%;
     height: auto;
+  }
+
+  .chart-navigator {
+    margin-top: 8px;
+    touch-action: none;
+    cursor: grab;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--code-bg);
+  }
+
+  .chart-navigator:active {
+    cursor: grabbing;
   }
 
   .chart-grid {
@@ -937,7 +1213,7 @@
     font-size: 12px;
   }
 
-  .chart-volume-label {
+  .chart-label-volume {
     font-size: 11px;
   }
 
@@ -957,23 +1233,57 @@
   }
 
   .chart-volume {
-    fill: color-mix(in srgb, var(--text) 28%, transparent);
+    fill: color-mix(in srgb, var(--text) 22%, transparent);
     cursor: pointer;
   }
 
   .chart-volume.is-active {
-    fill: color-mix(in srgb, var(--accent) 70%, var(--text));
+    fill: color-mix(in srgb, var(--accent) 55%, var(--text));
+  }
+
+  .chart-nav-track {
+    fill: color-mix(in srgb, var(--bg) 70%, transparent);
+  }
+
+  .chart-nav-line {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    pointer-events: none;
+  }
+
+  .chart-nav-mask {
+    fill: color-mix(in srgb, var(--code-bg) 55%, transparent);
+    pointer-events: none;
+  }
+
+  .chart-nav-window {
+    fill: color-mix(in srgb, var(--accent) 18%, transparent);
+    stroke: var(--accent);
+    stroke-width: 1.25;
+    cursor: grab;
+  }
+
+  .chart-nav-handle {
+    fill: var(--accent);
+    cursor: ew-resize;
+    opacity: 0.85;
+  }
+
+  .chart-nav-date {
+    font-size: 10px;
+  }
+
+  .chart-nav-range {
+    font-size: 10px;
+    fill: var(--text-h);
+    font-weight: 650;
   }
 
   .chart-tooltip {
     margin: 8px 0 0;
     color: var(--text-h);
     font-size: 0.92rem;
-  }
-
-  .chart-tooltip-hint {
-    color: var(--text);
-    font-weight: 400;
   }
 }
 .orders-panel {
@@ -995,6 +1305,23 @@
 .orders-panel select {
   font: inherit;
   padding: 8px 12px;
+}
+
+.orders-panel .orders-toolbar button {
+  transition: box-shadow 0.3s;
+}
+
+.orders-panel .orders-toolbar button:hover:not(:disabled) {
+  box-shadow: var(--shadow);
+}
+
+.dashboard {
+  display: grid;
+  gap: 0;
+}
+
+.dashboard-pane {
+  margin-top: 12px;
 }
 
 .orders-toolbar button[aria-current='page'] {

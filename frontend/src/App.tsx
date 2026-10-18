@@ -5,11 +5,11 @@ import AppHeader from './AppHeader'
 import Sidebar from './Sidebar'
 import ItemWorkspace from './ItemWorkspace'
 import NoticePopup from './NoticePopup'
-import { MyOrders } from './Orders'
+import Dashboard from './Dashboard'
 import { useQuickbar } from './useQuickbar'
 import './App.css'
 
-type Page = 'market' | 'orders'
+type Page = 'market' | 'dashboard'
 type ItemTab = 'data' | 'history'
 type NavTab = 'browse' | 'quickbar'
 
@@ -121,17 +121,22 @@ function App() {
       <NoticePopup message={notice} onClose={clearNotice} />
 
       <main id="center">
-        {page === 'orders' ? (
+        {page === 'dashboard' ? (
           <>
-            <h1>My Orders</h1>
+            <h1>Dashboard</h1>
             {session ? (
-              <MyOrders
+              <Dashboard
                 key={session.userId}
                 token={session.token}
+                locations={locations}
                 onExpired={handleExpired}
+                onNotice={setNotice}
               />
             ) : (
-              <p>Use the account menu (top right) to log in and view orders.</p>
+              <p>
+                Use the account menu (top right) to log in and view your
+                dashboard.
+              </p>
             )}
           </>
         ) : selectedType ? (
@@ -159,6 +164,10 @@ function App() {
             onExpired={handleExpired}
             onNeedLogin={() => setNotice('Log in to place a buy order.')}
             onHighlightBuyConsumed={clearHighlightBuy}
+            onNotice={setNotice}
+            onOrdersChanged={() =>
+              setMarketVersion((current) => current + 1)
+            }
             onBuyPlaced={(result) => {
               setMarketVersion((current) => current + 1)
               setOrdersFlashKey((current) => current + 1)

@@ -47,6 +47,7 @@ export type MarketOrder = {
   ownerKind: 'user' | 'market_maker' | 'external'
   ownerRef: string | null
   userId: number | null
+  username: string | null
   expiresAt: string | null
   createdAt: string
   updatedAt: string

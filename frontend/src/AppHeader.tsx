@@ -2,12 +2,12 @@ import type { LoginResponse } from './api/types'
 import AccountMenu from './AccountMenu'
 import brandIcon from './assets/negativeone-icon.png'
 
-type Page = 'market' | 'orders'
+type Page = 'market' | 'dashboard'
 
 type AppHeaderProps = {
   page: Page
   session: LoginResponse | null
-  /** Bump to flash the My Orders tab (e.g. after a successful buy). */
+  /** Bump to flash the Dashboard tab (e.g. after a successful buy). */
   ordersFlashKey?: number
   onPageChange: (page: Page) => void
   onLogin: (session: LoginResponse) => void
@@ -40,7 +40,7 @@ export default function AppHeader({
         />
         <span className="app-header-title">
           <strong>NegativeOne</strong>
-          <span className="sidebar-muted">Market browser</span>
+          <span className="sidebar-muted">Second Hand Market Browser</span>
         </span>
       </button>
 
@@ -55,11 +55,11 @@ export default function AppHeader({
         <button
           type="button"
           className={ordersFlashKey > 0 ? 'tab-flash' : undefined}
-          key={`orders-${ordersFlashKey}`}
-          aria-current={page === 'orders' ? 'page' : undefined}
-          onClick={() => onPageChange('orders')}
+          key={`dashboard-${ordersFlashKey}`}
+          aria-current={page === 'dashboard' ? 'page' : undefined}
+          onClick={() => onPageChange('dashboard')}
         >
-          My Orders
+          Dashboard
         </button>
       </nav>
 

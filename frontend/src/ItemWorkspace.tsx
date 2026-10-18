@@ -29,6 +29,8 @@ type ItemWorkspaceProps = {
   onBuyPlaced: (result: PlaceBuyOrderResponse) => void
   onNeedLogin: () => void
   onHighlightBuyConsumed: () => void
+  onOrdersChanged: () => void
+  onNotice: (message: string) => void
 }
 
 /** One selected catalogue type — keyed by typeId in App so the subtree fully resets on switch. */
@@ -49,6 +51,8 @@ export default function ItemWorkspace({
   onBuyPlaced,
   onNeedLogin,
   onHighlightBuyConsumed,
+  onOrdersChanged,
+  onNotice,
 }: ItemWorkspaceProps) {
   const [buyOpen, setBuyOpen] = useState(false)
   const [buyDefaults, setBuyDefaults] = useState<BuyOrderDefaults | undefined>()
@@ -114,44 +118,46 @@ export default function ItemWorkspace({
           </button>
         </nav>
 
-        <div className="item-tools" aria-label="Item actions">
-          <button type="button" onClick={() => openBuy()}>
-            Place buy order
-          </button>
-          <button type="button" onClick={onTogglePin}>
-            {pinned ? 'Unpin quickbar' : 'Add to quickbar'}
-          </button>
-          <label className="item-location">
-            Location
-            <select
-              value={locationId}
-              onChange={(event) => onLocationChange(Number(event.target.value))}
-            >
-              {locations.map((loc) => (
-                <option key={loc.locationId} value={loc.locationId}>
-                  {loc.parentLocationId == null
-                    ? loc.locationName
-                    : `↳ ${loc.locationName}`}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+        <label className="item-location">
+          Location
+          <select
+            value={locationId}
+            onChange={(event) => onLocationChange(Number(event.target.value))}
+          >
+            {locations.map((loc) => (
+              <option key={loc.locationId} value={loc.locationId}>
+                {loc.parentLocationId == null
+                  ? loc.locationName
+                  : `↳ ${loc.locationName}`}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <div className="item-pane">
         {itemTab === 'data' ? (
           <MarketOrders
             typeId={type.typeId}
+            typeName={type.typeName}
             locationId={locationId}
-            locationName={locationName}
+            locations={locations}
             locationNames={locationNames}
             canBuy={Boolean(session)}
+            pinned={pinned}
+            userId={session?.userId ?? null}
+            userName={session?.username ?? null}
+            token={session?.token ?? null}
             refreshToken={marketVersion}
             highlightBuyOrderId={highlightBuyOrderId}
             onBuyFromAsk={(defaults) => openBuy(defaults)}
             onNeedLogin={onNeedLogin}
             onHighlightBuyConsumed={onHighlightBuyConsumed}
+            onPlaceBuy={() => openBuy()}
+            onTogglePin={onTogglePin}
+            onExpired={onExpired}
+            onOrdersChanged={onOrdersChanged}
+            onNotice={onNotice}
           />
         ) : (
           <PriceHistory typeId={type.typeId} locationId={locationId} />
