@@ -6,7 +6,8 @@
 |-----------|----------|
 | Pipeline  |    1     |
 | Backend   |    1     |
-| Database  |    1     |
+| Database  |    2     |
+| Docs      |    2     |
 | Frontend  |    4     |
 | Mock Data |    4     |
 
@@ -24,6 +25,10 @@ Catalogue tables follow the EVE Online market relational model [via Fuzzwork SDE
 
 This relational mapping is appropriate due to the tree structure allowing for sparse procedural queries that are efficient for both the Frontend and Backend services.
 
+### Docs
+
+AI search was used to find and generate templates for documentation such as this one. All content is human written.
+
 ### Frontend
 
 Frontend made heavy use of generative AI to quickly scaffold, experiment and create user interfaces excluding the `frontend/src/api/clients.ts` + `types.ts` API layers. This allowed participation from inexperienced and new team members where the tradeoff was considered acceptable due to the robust and secure implementation of the Spring Boot API layer. The React application is a thin UX/UI layer that performs requests that can be achieved using Curl or Postman.
@@ -31,6 +36,7 @@ Frontend made heavy use of generative AI to quickly scaffold, experiment and cre
 ### Mock Data
 
 All mock data in `backend/src/main/resources/fixtures/market/` was generated using co-pilot.
+
 
 ## Overview
 
