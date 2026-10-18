@@ -171,6 +171,27 @@ paths:
                 items:
                   $ref: "#/components/schemas/InvType"
 
+  /_q/searchTypes:
+    get:
+      tags: [Catalogue]
+      operationId: searchTypes
+      summary: "q=searchTypes: query"
+      description: |
+        Case-insensitive substring search on type name and description.
+
+        **Call:** `GET /api?q=searchTypes:{query}`
+      responses:
+        "200":
+          description: Matching published types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InvType"
+        "400":
+          $ref: "#/components/responses/SolverError"
+
   /_q/listLocations:
     get:
       tags: [Catalogue]

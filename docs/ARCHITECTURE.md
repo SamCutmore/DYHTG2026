@@ -8,6 +8,7 @@
 | Backend   |    1     |
 | Database  |    1     |
 | Frontend  |    4     |
+| Mock Data |    4     |
 
 ### Pipeline
 
@@ -26,6 +27,10 @@ This relational mapping is appropriate due to the tree structure allowing for sp
 ### Frontend
 
 Frontend made heavy use of generative AI to quickly scaffold, experiment and create user interfaces excluding the `frontend/src/api/clients.ts` + `types.ts` API layers. This allowed participation from inexperienced and new team members where the tradeoff was considered acceptable due to the robust and secure implementation of the Spring Boot API layer. The React application is a thin UX/UI layer that performs requests that can be achieved using Curl or Postman.
+
+### Mock Data
+
+All mock data in `backend/src/main/resources/fixtures/market/` was generated using co-pilot.
 
 ## Overview
 

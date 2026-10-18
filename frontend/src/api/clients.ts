@@ -99,6 +99,13 @@ export async function listTypes(groupId: number): Promise<InvType[]> {
   return data
 }
 
+export async function searchTypes(query: string): Promise<InvType[]> {
+  const { data } = await api.get<InvType[]>('/api', {
+    params: { q: `searchTypes: ${query}` },
+  })
+  return data
+}
+
 export async function listLocations(
   parent: 'root' | number = 'root',
 ): Promise<Location[]> {

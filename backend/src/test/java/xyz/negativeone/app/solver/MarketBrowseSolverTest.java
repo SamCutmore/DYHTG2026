@@ -1,6 +1,7 @@
 package xyz.negativeone.app.solver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static xyz.negativeone.app.support.MarketTestFixtures.GROUP_APPLE;
 import static xyz.negativeone.app.support.MarketTestFixtures.GROUP_PHONES;
@@ -88,6 +89,19 @@ class MarketBrowseSolverTest {
     JsonNode types = jsonMapper.readTree(dispatcher.solve("listTypes: 99999"));
     assertTrue(types.isArray());
     assertEquals(0, types.size());
+  }
+
+  @Test
+  void searchTypesFindsByNameSubstring() {
+    JsonNode types = jsonMapper.readTree(dispatcher.solve("searchTypes: iphone"));
+    assertTrue(types.size() >= 1);
+    assertEquals(TYPE_ID, types.get(0).get("typeId").asInt());
+  }
+
+  @Test
+  void searchTypesRejectsShortQuery() {
+    assertThrows(
+        IllegalArgumentException.class, () -> dispatcher.solve("searchTypes: a"));
   }
 
   @Test
