@@ -42,27 +42,27 @@ public class InvTypeRepository {
         marketGroupId);
   }
 
-	public Optional<InvTypeRecord> findById(int typeId) {
-		List<InvTypeRecord> rows =
-				jdbc.query(
-						"""
+  public Optional<InvTypeRecord> findById(int typeId) {
+    List<InvTypeRecord> rows =
+        jdbc.query(
+            """
 				SELECT type_id, type_name, description, base_price, published, market_group_id
 				FROM inv_types
 				WHERE type_id = ?
 				""",
-						MAPPER,
-						typeId);
-		if (rows.isEmpty()) {
-			return Optional.empty();
-		}
-		return Optional.of(rows.get(0));
-	}
+            MAPPER,
+            typeId);
+    if (rows.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(rows.get(0));
+  }
 
-	/** Case-insensitive substring match on type name (and description). */
-	public List<InvTypeRecord> search(String query) {
-		String pattern = "%" + escapeLike(query) + "%";
-		return jdbc.query(
-				"""
+  /** Case-insensitive substring match on type name (and description). */
+  public List<InvTypeRecord> search(String query) {
+    String pattern = "%" + escapeLike(query) + "%";
+    return jdbc.query(
+        """
 				SELECT type_id, type_name, description, base_price, published, market_group_id
 				FROM inv_types
 				WHERE published = TRUE
@@ -70,14 +70,14 @@ public class InvTypeRepository {
 				       OR LOWER(COALESCE(description, '')) LIKE LOWER(?) ESCAPE '\\')
 				ORDER BY type_name
 				""",
-				MAPPER,
-				pattern,
-				pattern);
-	}
+        MAPPER,
+        pattern,
+        pattern);
+  }
 
-	private static String escapeLike(String raw) {
-		return raw.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
-	}
+  private static String escapeLike(String raw) {
+    return raw.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+  }
 
   /** Insert or refresh a catalogue type (fixture / seed load). */
   public void upsert(

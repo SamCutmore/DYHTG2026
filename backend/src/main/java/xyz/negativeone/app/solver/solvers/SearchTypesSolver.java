@@ -10,7 +10,7 @@ import xyz.negativeone.app.persistence.InvTypeRecord;
 import xyz.negativeone.app.persistence.InvTypeRepository;
 import xyz.negativeone.app.solver.Query;
 
-/** Catalogue search across published types.*/
+/** Catalogue search across published types. */
 public class SearchTypesSolver extends RegexSolver {
   private static final Logger logger = LoggerFactory.getLogger(SearchTypesSolver.class);
 
@@ -38,12 +38,10 @@ public class SearchTypesSolver extends RegexSolver {
   public String solve(Matcher m) {
     String q = m.group(1).trim();
     if (q.length() < MIN_QUERY_LEN) {
-      throw new IllegalArgumentException(
-          "query must be at least " + MIN_QUERY_LEN + " characters");
+      throw new IllegalArgumentException("query must be at least " + MIN_QUERY_LEN + " characters");
     }
     if (q.length() > MAX_QUERY_LEN) {
-      throw new IllegalArgumentException(
-          "query must be at most " + MAX_QUERY_LEN + " characters");
+      throw new IllegalArgumentException("query must be at most " + MAX_QUERY_LEN + " characters");
     }
     List<InvTypeRecord> rows = types.search(q);
     logger.info("searchTypes q={} → {} row(s)", q, rows.size());

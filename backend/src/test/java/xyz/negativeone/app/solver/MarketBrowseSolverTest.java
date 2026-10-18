@@ -100,8 +100,7 @@ class MarketBrowseSolverTest {
 
   @Test
   void searchTypesRejectsShortQuery() {
-    assertThrows(
-        IllegalArgumentException.class, () -> dispatcher.solve("searchTypes: a"));
+    assertThrows(IllegalArgumentException.class, () -> dispatcher.solve("searchTypes: a"));
   }
 
   @Test

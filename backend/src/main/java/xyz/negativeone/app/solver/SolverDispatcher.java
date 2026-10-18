@@ -73,10 +73,10 @@ public class SolverDispatcher extends QueryParser {
     solvers.add(new RegisterSolver(users, credentials));
     solvers.add(new LoginSolver(users, credentials, sessions, jsonMapper));
     solvers.add(new LogoutSolver(sessions));
-		solvers.add(new ListMarketGroupsSolver(marketGroups, jsonMapper));
-		solvers.add(new ListTypesSolver(invTypes, jsonMapper));
-		solvers.add(new SearchTypesSolver(invTypes, jsonMapper));
-		solvers.add(new ListLocationsSolver(locations, jsonMapper));
+    solvers.add(new ListMarketGroupsSolver(marketGroups, jsonMapper));
+    solvers.add(new ListTypesSolver(invTypes, jsonMapper));
+    solvers.add(new SearchTypesSolver(invTypes, jsonMapper));
+    solvers.add(new ListLocationsSolver(locations, jsonMapper));
     solvers.add(new GetOrderBookSolver(marketOrders, jsonMapper));
     solvers.add(new GetHistorySolver(marketHistory, jsonMapper));
     solvers.add(new GetMarketPriceSolver(marketPrices, jsonMapper));
