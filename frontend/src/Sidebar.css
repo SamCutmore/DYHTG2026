@@ -1,13 +1,13 @@
 .sidebar {
   padding: 28px 20px;
   border-right: 1px solid var(--border);
-  background: #f5f7f4;
+  background: var(--code-bg);
 
   h2 {
     margin: 0 0 28px;
-    font-size: 18px;
+    font-size: 1.2rem;
     font-weight: 650;
-    color: #263c35;
+    color: var(--text-h);
   }
 }
 
@@ -15,18 +15,18 @@
   display: flex;
   flex-direction: column;
   gap: 7px;
-  color: #52635c;
-  font-size: 13px;
+  color: var(--text);
+  font-size: 0.9rem;
   font-weight: 600;
 
   input {
     width: 100%;
     box-sizing: border-box;
     padding: 10px 11px;
-    border: 1px solid #cbd5ce;
+    border: 1px solid var(--border);
     border-radius: 4px;
-    background: rgb(42, 39, 39);
-    color: white;
+    background: var(--bg);
+    color: var(--text-h);
     font: inherit;
     font-weight: 400;
   }
@@ -42,8 +42,8 @@
 
   h3 {
     margin: 0 0 10px;
-    color: #263c35;
-    font-size: 14px;
+    color: var(--text-h);
+    font-size: 1rem;
     font-weight: 650;
   }
 
@@ -64,12 +64,12 @@
   p,
   .sidebar-muted {
     color: #697970;
-    font-size: 12px;
+    font-size: 0.85rem;
   }
 
   .sidebar-error {
     color: #8b3a3a;
-    font-size: 12px;
+    font-size: 0.85rem;
   }
 }
 
@@ -88,27 +88,27 @@
   border: 0;
   border-radius: 4px;
   background: transparent;
-  color: #263c35;
+  color: var(--text-h);
   font: inherit;
-  font-size: 13px;
+  font-size: 0.95rem;
   text-align: left;
   cursor: pointer;
 }
 
 .sidebar-group-toggle:hover,
 .sidebar-type:hover {
-  background: #e7ece8;
+  background: var(--border);
 }
 
 .sidebar-type.selected {
-  background: #d7e5dc;
+  background: var(--accent-bg);
   font-weight: 650;
 }
 
 .sidebar-caret {
   width: 1em;
   color: #697970;
-  font-size: 11px;
+  font-size: 0.75rem;
 }
 
 @media (max-width: 680px) {
