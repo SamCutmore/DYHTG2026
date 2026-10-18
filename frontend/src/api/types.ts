@@ -9,6 +9,10 @@ export type LoginResponse = {
   username: string
 }
 
+export type HealthResponse = {
+  status: string
+}
+
 export type MarketGroup = {
   marketGroupId: number
   parentGroupId: number | null
@@ -26,6 +30,13 @@ export type InvType = {
   marketGroupId: number | null
 }
 
+export type Location = {
+  locationId: number
+  parentLocationId: number | null
+  locationName: string
+  description: string | null
+}
+
 export type MarketOrder = {
   orderId: number
   typeId: number
@@ -37,6 +48,7 @@ export type MarketOrder = {
   quantityInitial: number
   status: 'open' | 'partial' | 'filled' | 'cancelled'
   externalUrl: string | null
+  externalListingId: string | null
   ownerKind: 'user' | 'market_maker' | 'external'
   ownerRef: string | null
   userId: number | null
@@ -88,4 +100,74 @@ export type MyOrder = {
   quantityInitial: number
   status: MarketOrder['status']
   createdAt: string
+}
+
+export type MarketPrice = {
+  typeId: number
+  locationId: number
+  medianPrice: number | null
+  lowestPrice: number | null
+  sampleSize: number
+}
+
+export type PlaceBuyOrderResponse = {
+  orderId: number
+  userId: number
+  expiresAt: string
+  fills: number
+}
+
+export type CancelOrderResponse = {
+  orderId: number
+  status: 'cancelled'
+}
+
+export type EditOrderResponse = {
+  orderId: number
+  price: number
+  quantity: number
+  quantityInitial: number
+  status: string
+  fills: number
+}
+
+export type PlaceSellOrderResponse = {
+  orderId: number
+  typeId: number
+  locationId: number
+  sourceId: number
+  externalListingId: string
+  price: number
+  quantity: number
+  quantityInitial: number
+  status: string
+  fills: number
+  lastUpdated: string
+  createdAt: string
+}
+
+export type EditSellOrderResponse = {
+  orderId: number
+  sourceId: number
+  externalListingId: string
+  price: number
+  quantity: number
+  quantityInitial: number
+  status: string
+  fills: number
+  lastUpdated: string
+}
+
+export type CancelSellOrderResponse = {
+  orderId: number
+  sourceId: number
+  externalListingId: string
+  status: string
+  lastUpdated: string
+}
+
+export type CancelStaleSellOrdersResponse = {
+  sourceId: number
+  updatedBefore: string
+  cancelled: number
 }

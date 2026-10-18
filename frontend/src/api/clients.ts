@@ -1,18 +1,34 @@
 import axios from 'axios'
 import type {
+  CancelOrderResponse,
+  CancelSellOrderResponse,
+  CancelStaleSellOrdersResponse,
+  EditOrderResponse,
+  EditSellOrderResponse,
+  HealthResponse,
   InvType,
+  Location,
   LoginResponse,
   MarketGroup,
   MarketHistory,
   MarketOrder,
+  MarketPrice,
   Message,
   MyOrder,
   MyTransaction,
   OrderBook,
+  PlaceBuyOrderResponse,
+  PlaceSellOrderResponse,
 } from './types'
 
 const api = axios.create({ baseURL: '/' })
 
+export async function health(): Promise<HealthResponse> {
+  const { data } = await api.get<HealthResponse>('/api/health')
+  return data
+}
+
+/** @deprecated Legacy scaffold */
 export async function sendMessage(message: string): Promise<void> {
   await api.post('/api', null, {
     params: { q: `sendMessage: ${message}` },
@@ -27,6 +43,7 @@ function toIso(value: string): string {
   return parsed.toISOString()
 }
 
+/** @deprecated */
 export async function readMessages(from: string, to: string): Promise<Message[]> {
   const { data } = await api.get<Message[]>('/api', {
     params: { q: `readMessages: ${toIso(from)};${toIso(to)}` },
@@ -82,9 +99,53 @@ export async function listTypes(groupId: number): Promise<InvType[]> {
   return data
 }
 
-export type PlaceBuyOrderResponse = {
-  orderId: number
-  fills: number
+export async function listLocations(
+  parent: 'root' | number = 'root',
+): Promise<Location[]> {
+  const { data } = await api.get<Location[]>('/api', {
+    params: { q: `listLocations: ${parent}` },
+  })
+  return data
+}
+
+export async function getOrderBook(
+  typeId: number,
+  locationId = 1,
+): Promise<OrderBook> {
+  const { data } = await api.get<OrderBook>('/api', {
+    params: { q: `getOrderBook: ${typeId};${locationId}` },
+  })
+  return data
+}
+
+export async function getHistory(
+  typeId: number,
+  locationId = 1,
+): Promise<MarketHistory[]> {
+  const { data } = await api.get<MarketHistory[]>('/api', {
+    params: { q: `getHistory: ${typeId};${locationId}` },
+  })
+  return data
+}
+
+export async function getMarketPrice(
+  typeId: number,
+  locationId = 1,
+): Promise<MarketPrice> {
+  const { data } = await api.get<MarketPrice>('/api', {
+    params: { q: `getMarketPrice: ${typeId};${locationId}` },
+  })
+  return data
+}
+
+export async function refreshMarketPrice(
+  typeId: number,
+  locationId = 1,
+): Promise<MarketPrice> {
+  const { data } = await api.post<MarketPrice>('/api', null, {
+    params: { q: `refreshMarketPrice: ${typeId};${locationId}` },
+  })
+  return data
 }
 
 export async function placeBuyOrder(
@@ -102,16 +163,25 @@ export async function placeBuyOrder(
   return data
 }
 
-export async function getOrderBook( typeId: number, locationId = 1): Promise<OrderBook> { // chose location 1 here is because it is the UK in the seed data, we have getOrderSolver handling this already
-  const { data } = await api.get<OrderBook>('/api', {
-    params: { q: `getOrderBook: ${typeId};${locationId}` },
+export async function cancelOrder(
+  orderId: number,
+  token: string,
+): Promise<CancelOrderResponse> {
+  const { data } = await api.post<CancelOrderResponse>('/api', null, {
+    params: { q: `cancelOrder: ${orderId};${token}` },
   })
   return data
 }
 
-export async function getHistory(typeId: number, locationId = 1): Promise<MarketHistory[]> {
-  const { data } = await api.get<MarketHistory[]>('/api', {
-    params: { q: `getHistory: ${typeId};${locationId}` },
+/** quantity is the new remaining size. */
+export async function editOrder(
+  orderId: number,
+  price: number,
+  quantity: number,
+  token: string,
+): Promise<EditOrderResponse> {
+  const { data } = await api.post<EditOrderResponse>('/api', null, {
+    params: { q: `editOrder: ${orderId};${price};${quantity};${token}` },
   })
   return data
 }
@@ -130,10 +200,68 @@ export async function listMyTransactions(token: string): Promise<MyTransaction[]
   return data
 }
 
-/** Account UI: all of the user's buy orders (with typeName). */
+/** All of the user's buy orders (with typeName). */
 export async function getMyOrders(token: string): Promise<MyOrder[]> {
   const { data } = await api.get<MyOrder[]>('/api', {
     params: { q: `getMyOrders: ${token}` },
+  })
+  return data
+}
+
+export async function placeSellOrder(
+  typeId: number,
+  locationId: number,
+  sourceId: number,
+  price: number,
+  quantity: number,
+  externalListingId: string,
+  ingestionToken: string,
+): Promise<PlaceSellOrderResponse> {
+  const { data } = await api.post<PlaceSellOrderResponse>('/api', null, {
+    params: {
+      q: `placeSellOrder: ${typeId};${locationId};${sourceId};${price};${quantity};${externalListingId};${ingestionToken}`,
+    },
+  })
+  return data
+}
+
+export async function editSellOrder(
+  sourceId: number,
+  externalListingId: string,
+  price: number,
+  quantity: number,
+  ingestionToken: string,
+): Promise<EditSellOrderResponse> {
+  const { data } = await api.post<EditSellOrderResponse>('/api', null, {
+    params: {
+      q: `editSellOrder: ${sourceId};${externalListingId};${price};${quantity};${ingestionToken}`,
+    },
+  })
+  return data
+}
+
+export async function cancelSellOrder(
+  sourceId: number,
+  externalListingId: string,
+  ingestionToken: string,
+): Promise<CancelSellOrderResponse> {
+  const { data } = await api.post<CancelSellOrderResponse>('/api', null, {
+    params: {
+      q: `cancelSellOrder: ${sourceId};${externalListingId};${ingestionToken}`,
+    },
+  })
+  return data
+}
+
+export async function cancelStaleSellOrders(
+  sourceId: number,
+  updatedBeforeEpochMs: number,
+  ingestionToken: string,
+): Promise<CancelStaleSellOrdersResponse> {
+  const { data } = await api.post<CancelStaleSellOrdersResponse>('/api', null, {
+    params: {
+      q: `cancelStaleSellOrders: ${sourceId};${updatedBeforeEpochMs};${ingestionToken}`,
+    },
   })
   return data
 }
