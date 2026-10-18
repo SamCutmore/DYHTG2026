@@ -18,20 +18,8 @@ info:
     | Surface | Auth |
     |---------|------|
     | Browse / history / prices / locations | None |
-    | User buys (`placeBuyOrder`, `cancelOrder`, `editOrder`, my orders) | Session token in `q` |
-    | External sell ingest (`placeSellOrder`, …) | Trailing `ingestionToken` in `q` |
-
-    ### Ingest token
-    Sell ingest solvers require a shared secret as the **last** `;`-field:
-
-    - Config: `negativeone.ingest.token`
-    - Env (prod): `NEGATIVEONE_INGEST_TOKEN`
-    - Dev default: `dev-ingest-token`
-
-    Wrong/missing token → `400 Unauthorized`.
-
-    Stale sync: capture `syncStart`, upsert live listings, then
-    `cancelStaleSellOrders: sourceId;syncStartEpochMs;ingestionToken`.
+    | User buys (`placeBuyOrder`, `cancelOrder`, `editOrder`) | Session token in `q` |
+    | Sell Order Ingestion (`placeSellOrder`, …) | API `ingestionToken` in `q` |
 
 servers:
   - url: http://localhost:8080
